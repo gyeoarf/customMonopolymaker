@@ -1,5 +1,5 @@
 import { appState } from '../main.js';
-import { renderImageToolbar } from './ImageManipulation.js';
+import { createInteractableImage } from './InteractableImage.js';
 
 export function renderCurrencyForm(container) {
   const { currency } = appState.assetData;
@@ -30,15 +30,11 @@ export function renderCurrencyForm(container) {
         <button id="curr-clear-bg" class="btn-secondary" style="margin-top:5px; display:${currency.backgroundImageUrl ? 'block' : 'none'}">Clear Image</button>
       </div>
 
-      <div id="image-toolbar-container" style="display: ${currency.backgroundImageUrl ? 'block' : 'none'}">
-        <!-- Toolbar injected here -->
+      <div id="image-toolbar-container" style="display: none">
+        <!-- Legacy toolbar removed -->
       </div>
     </div>
   `;
-
-  if (currency.backgroundImageUrl) {
-    renderImageToolbar(document.getElementById('image-toolbar-container'), 'currency');
-  }
 
   // Bindings
   document.getElementById('curr-amount').addEventListener('input', (e) => {
@@ -83,29 +79,17 @@ export function renderCurrencyPreview(container) {
           <div class="corner bottom-right" id="corner-br">${currency.denomination}</div>
         </div>
       </div>
-      ${currency.backgroundImageUrl ? `<img id="curr-bg-img" class="bill-bg" src="${currency.backgroundImageUrl}" style="transform: scale(${currency.transform.scale}) rotate(${currency.transform.rotate}deg) scaleX(${currency.transform.flipX}) scaleY(${currency.transform.flipY})" />` : ''}
+      </div>
+      <div id="curr-bg-container" style="position:absolute; top:0; left:0; width:100%; height:100%; overflow:hidden; z-index:1;"></div>
     </div>
   `;
 
-  // Live Subscription
-  appState.subscribe('currency_updated', (data) => {
-    // Re-render whole forms section if bg status changes for toolbar visibility
-    const tbContainer = document.getElementById('image-toolbar-container');
-    const clearBtn = document.getElementById('curr-clear-bg');
-    if (tbContainer) {
-      if (data.backgroundImageUrl && tbContainer.innerHTML.trim() === '') {
-        renderImageToolbar(tbContainer, 'currency');
-        tbContainer.style.display = 'block';
-        clearBtn.style.display = 'block';
-      } else if (!data.backgroundImageUrl) {
-        tbContainer.innerHTML = '';
-        tbContainer.style.display = 'none';
-        clearBtn.style.display = 'none';
-      }
-    }
+  let interactableInstance = null;
 
-    const { scale, rotate, flipX, flipY } = data.transform;
-    const bgImgEl = document.getElementById('curr-bg-img');
+  appState.subscribe('currency_updated', (data) => {
+    // Reveal clear button if active
+    const clearBtn = document.getElementById('curr-clear-bg');
+    if (clearBtn) clearBtn.style.display = data.backgroundImageUrl ? 'block' : 'none';
 
     // Structural Update (DOM)
     document.getElementById('curr-preview').style.backgroundColor = data.backgroundColor;
@@ -116,20 +100,25 @@ export function renderCurrencyPreview(container) {
     document.getElementById('center-val').textContent = data.denomination;
 
     // Handle Image Mounting
+    const containerEl = document.getElementById('curr-bg-container');
+    
     if (data.backgroundImageUrl) {
-      if (!bgImgEl) {
-        const img = document.createElement('img');
-        img.id = 'curr-bg-img';
-        img.className = 'bill-bg';
-        img.src = data.backgroundImageUrl;
-        img.style.transform = `scale(${scale}) rotate(${rotate}deg) scaleX(${flipX}) scaleY(${flipY})`;
-        document.getElementById('curr-preview').appendChild(img);
+      if (!interactableInstance) {
+        interactableInstance = createInteractableImage(data.backgroundImageUrl, containerEl, {
+          ...data.transform,
+          onUpdate: (newTrans) => {
+            appState.assetData.currency.transform = newTrans;
+          }
+        });
       } else {
-        bgImgEl.src = data.backgroundImageUrl;
-        bgImgEl.style.transform = `scale(${scale}) rotate(${rotate}deg) scaleX(${flipX}) scaleY(${flipY})`;
+        interactableInstance.updateSrc(data.backgroundImageUrl);
+        interactableInstance.updateState(data.transform);
       }
-    } else if (bgImgEl) {
-      bgImgEl.remove();
+    } else {
+      if (interactableInstance) {
+        interactableInstance.destroy();
+        interactableInstance = null;
+      }
     }
   });
 }

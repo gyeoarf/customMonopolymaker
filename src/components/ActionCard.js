@@ -1,4 +1,5 @@
 import { appState } from '../main.js';
+import { createInteractableImage } from './InteractableImage.js';
 
 export function renderActionCardForm(container, type) { // type can be 'chance', 'chest', or 'back'
   const stateRef = appState.assetData[type];
@@ -37,17 +38,9 @@ export function renderActionCardForm(container, type) { // type can be 'chance',
       <div class="form-divider"></div>
       
       <div class="form-group">
-        <label>Upload Pattern/Background Image</label>
+        <label>Upload Background Image</label>
         <input type="file" id="ac-bg-upload" accept="image/*" />
         <button id="ac-clear-bg" class="btn-secondary" style="margin-top:5px; display:${stateRef.image ? 'block' : 'none'}">Clear Image</button>
-      </div>
-
-      <div class="form-group" style="margin-top: 10px; display:${stateRef.image ? 'block' : 'none'}" id="bg-repeat-toggle-container">
-        <label style="display:flex; align-items:center; gap:8px;">
-          <input type="checkbox" id="ac-repeat-toggle" ${stateRef.repeatPattern ? 'checked' : ''} />
-          Repeat Pattern (Tile)
-        </label>
-        <p style="font-size:11px; color:#64748b; margin-top:4px;">If unchecked, image will stretch to cover the entire card.</p>
       </div>
     `;
   }
@@ -97,13 +90,6 @@ export function renderActionCardForm(container, type) { // type can be 'chance',
       appState.updateState(type, 'image', null);
       renderActionCardForm(container, type);
     });
-
-    const repeatToggle = document.getElementById('ac-repeat-toggle');
-    if (repeatToggle) {
-      repeatToggle.addEventListener('change', (e) => {
-        appState.updateState(type, 'repeatPattern', e.target.checked);
-      });
-    }
   }
 }
 
@@ -113,7 +99,7 @@ export function renderActionCardPreview(container, type) {
   if (type === 'chance' || type === 'chest') {
     const isChest = type === 'chest';
     // Chest defaults to traditional chest logo if no custom image
-    const defaultImgSrc = isChest ? '/assets/cardselements/chest_logo.png' : '';
+    const defaultImgSrc = isChest ? '/assets/cardselements/communitychest.png' : '';
     
     // We render a standard property card sized container, but formatted differently
     container.innerHTML = `
@@ -121,8 +107,9 @@ export function renderActionCardPreview(container, type) {
         <div class="card-border action-inner">
           <div class="action-title">${isChest ? 'COMMUNITY CHEST' : 'CHANCE'}</div>
           
-          <div class="action-image-wrapper">
-             <img id="preview-ac-img" src="${stateRef.image || defaultImgSrc}" class="action-icon" style="display: ${stateRef.image || isChest ? 'block' : 'none'};" onerror="this.style.display='none'" />
+          <div class="action-image-wrapper" id="preview-ac-img-container" style="position: relative;">
+             <!-- Default static image -->
+             <img id="preview-ac-img-default" src="${defaultImgSrc}" class="action-icon" style="display: ${!stateRef.image && isChest ? 'block' : 'none'}; pointer-events: none;" />
           </div>
 
           <div class="action-body" id="preview-ac-text">
@@ -132,33 +119,72 @@ export function renderActionCardPreview(container, type) {
       </div>
     `;
 
+    let interactableInstance = null;
+
     appState.subscribe(`${type}_updated`, (data) => {
       document.getElementById('preview-ac-text').innerHTML = data.text.replace(/\\n/g, '<br/>');
-      const imgEl = document.getElementById('preview-ac-img');
-      imgEl.src = data.image || defaultImgSrc;
-      imgEl.style.display = (data.image || isChest) ? 'block' : 'none';
+      
+      const defaultImg = document.getElementById('preview-ac-img-default');
+      const containerEl = document.getElementById('preview-ac-img-container');
+
+      if (data.image) {
+        defaultImg.style.display = 'none';
+        if (!interactableInstance) {
+          interactableInstance = createInteractableImage(data.image, containerEl, {
+            ...data.transform,
+            onUpdate: (newTrans) => {
+              // Update state silently so we don't cause an infinite re-render loop
+              appState.assetData[type].transform = newTrans;
+            }
+          });
+        } else {
+          interactableInstance.updateSrc(data.image);
+          interactableInstance.updateState(data.transform);
+        }
+      } else {
+        if (interactableInstance) {
+          interactableInstance.destroy();
+          interactableInstance = null;
+        }
+        defaultImg.style.display = isChest ? 'block' : 'none';
+      }
     });
 
   } else if (type === 'back') {
     container.innerHTML = `
-      <div class="property-card action-card-container">
-        <div class="card-border action-back" id="preview-back-bg" style="
-          background-color: ${stateRef.backgroundColor};
-          background-image: ${stateRef.image ? `url('${stateRef.image}')` : 'none'};
-          background-size: ${stateRef.repeatPattern ? 'auto' : 'cover'};
-          background-repeat: ${stateRef.repeatPattern ? 'repeat' : 'no-repeat'};
-          background-position: center;
-        ">
+      <div class="property-card action-card-container" style="background-color: ${stateRef.backgroundColor}; position: relative; overflow: hidden;">
+        <div id="preview-back-bg" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:0;"></div>
+        <div class="card-border action-back" style="position:relative; z-index:10; pointer-events:none;">
         </div>
       </div>
     `;
 
+    let interactableInstanceBack = null;
+
     appState.subscribe('back_updated', (data) => {
-      const bgEl = document.getElementById('preview-back-bg');
-      bgEl.style.backgroundColor = data.backgroundColor;
-      bgEl.style.backgroundImage = data.image ? `url('${data.image}')` : 'none';
-      bgEl.style.backgroundSize = data.repeatPattern ? 'auto' : 'cover';
-      bgEl.style.backgroundRepeat = data.repeatPattern ? 'repeat' : 'no-repeat';
+      const outerEl = container.querySelector('.action-card-container');
+      if (outerEl) outerEl.style.backgroundColor = data.backgroundColor;
+
+      const bgContainer = document.getElementById('preview-back-bg');
+      
+      if (data.image) {
+        if (!interactableInstanceBack) {
+          interactableInstanceBack = createInteractableImage(data.image, bgContainer, {
+            ...data.transform,
+            onUpdate: (newTrans) => {
+              appState.assetData.back.transform = newTrans;
+            }
+          });
+        } else {
+          interactableInstanceBack.updateSrc(data.image);
+          interactableInstanceBack.updateState(data.transform);
+        }
+      } else {
+        if (interactableInstanceBack) {
+          interactableInstanceBack.destroy();
+          interactableInstanceBack = null;
+        }
+      }
     });
   }
 }

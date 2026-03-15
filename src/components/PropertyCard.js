@@ -1,4 +1,5 @@
 import { appState } from '../main.js';
+import { createInteractableImage } from './InteractableImage.js';
 
 export function renderPropertyForm(container) {
   const { property } = appState.assetData;
@@ -168,9 +169,11 @@ export function renderPropertyPreview(container) {
     <div class="property-card" id="card-preview" style="
       background-color: ${property.backgroundColor || '#FFFFFF'};
       color: ${property.textColor || '#000000'};
-      ${property.backgroundImageUrl ? `background-image: url('${property.backgroundImageUrl}'); background-size: cover; background-position: center;` : ''}
+      position: relative;
     ">
-      <div class="card-border" style="border-color: ${property.textColor || '#000000'}">
+      <div id="prop-bg-container" style="position:absolute; top:0; left:0; width:100%; height:100%; overflow:hidden; z-index: 0;"></div>
+      
+      <div class="card-border" style="border-color: ${property.textColor || '#000000'}; position: relative; z-index: 10; pointer-events: none;">
         <div class="card-header" id="preview-header" style="background-color: ${property.headerColor || '#005CE6'}; color: ${property.headerTextColor || '#FFFFFF'}; border-bottom-color: ${property.textColor || '#000000'};">
           <div class="title-deed">TITLE DEED</div>
           <h1 id="preview-title">${property.title}</h1>
@@ -209,17 +212,32 @@ export function renderPropertyPreview(container) {
     </div>
   `;
 
+  let interactableInstance = null;
+
   // Subscribe to updates for Live Preview
   appState.subscribe('property_updated', (data) => {
     const cardEl = document.getElementById('card-preview');
     cardEl.style.backgroundColor = data.backgroundColor;
     cardEl.style.color = data.textColor;
+    
+    const containerEl = document.getElementById('prop-bg-container');
     if (data.backgroundImageUrl) {
-      cardEl.style.backgroundImage = `url('${data.backgroundImageUrl}')`;
-      cardEl.style.backgroundSize = 'cover';
-      cardEl.style.backgroundPosition = 'center';
+      if (!interactableInstance) {
+        interactableInstance = createInteractableImage(data.backgroundImageUrl, containerEl, {
+          ...data.transform,
+          onUpdate: (newTrans) => {
+            appState.assetData.property.transform = newTrans;
+          }
+        });
+      } else {
+        interactableInstance.updateSrc(data.backgroundImageUrl);
+        interactableInstance.updateState(data.transform);
+      }
     } else {
-      cardEl.style.backgroundImage = 'none';
+      if (interactableInstance) {
+        interactableInstance.destroy();
+        interactableInstance = null;
+      }
     }
 
     const borderEl = cardEl.querySelector('.card-border');

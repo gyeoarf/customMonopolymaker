@@ -1,5 +1,5 @@
 import { appState } from '../main.js';
-import { renderImageToolbar } from './ImageManipulation.js';
+import { createInteractableImage } from './InteractableImage.js';
 
 
 export function renderDiceForm(container) {
@@ -17,14 +17,10 @@ export function renderDiceForm(container) {
         <input type="file" id="dice-img-upload" accept="image/*" ${dice.activeFaceIndex === null ? 'disabled' : ''} />
       </div>
 
-      <div id="image-toolbar-container" style="display: ${dice.activeFaceIndex !== null && dice.faces[dice.activeFaceIndex] ? 'block' : 'none'}">
+      <div id="image-toolbar-container" style="display: none">
       </div>
     </div>
   `;
-
-  if (dice.activeFaceIndex !== null && dice.faces[dice.activeFaceIndex]) {
-    renderImageToolbar(document.getElementById('image-toolbar-container'), 'dice');
-  }
 
   // Bindings
   document.getElementById('dice-img-upload').addEventListener('change', (e) => {
@@ -57,8 +53,8 @@ export function renderDicePreview(container) {
     <div class="dice-grid" id="dice-preview">
       ${Array.from({ length: 6 }).map((_, i) => `
         <div class="dice-face ${dice.activeFaceIndex === i ? 'active' : ''}" data-index="${i}">
-          <div class="face-number">${i + 1}</div>
-          ${dice.faces[i] ? `<img class="dice-bg" src="${dice.faces[i]}" style="transform: scale(${dice.transforms[i].scale}) rotate(${dice.transforms[i].rotate}deg) scaleX(${dice.transforms[i].flipX}) scaleY(${dice.transforms[i].flipY})" />` : ''}
+          <div class="face-number" style="z-index: 10; position: relative;">${i + 1}</div>
+          <div class="dice-mount" style="position:absolute; top:0; left:0; width:100%; height:100%; overflow:hidden; z-index:1;"></div>
         </div>
       `).join('')}
     </div>
@@ -78,23 +74,33 @@ export function renderDicePreview(container) {
     });
   });
 
+  let instances = Array(6).fill(null);
+
   // Global subscription for transformations/new images
   appState.subscribe('dice_updated', (data) => {
     data.faces.forEach((src, i) => {
       const faceEl = document.querySelector(`.dice-face[data-index="${i}"]`);
       if (!faceEl) return;
       
-      let img = faceEl.querySelector('img.dice-bg');
+      const mountEl = faceEl.querySelector('.dice-mount');
+      
       if (src) {
-        if (!img) {
-          img = document.createElement('img');
-          img.className = 'dice-bg';
-          faceEl.appendChild(img);
+        if (!instances[i]) {
+          instances[i] = createInteractableImage(src, mountEl, {
+            ...data.transforms[i],
+            onUpdate: (newTrans) => {
+              appState.assetData.dice.transforms[i] = newTrans;
+            }
+          });
+        } else {
+          instances[i].updateSrc(src);
+          instances[i].updateState(data.transforms[i]);
         }
-        img.src = src;
-        img.style.transform = `scale(${data.transforms[i].scale}) rotate(${data.transforms[i].rotate}deg) scaleX(${data.transforms[i].flipX}) scaleY(${data.transforms[i].flipY})`;
-      } else if (img) {
-        img.remove();
+      } else {
+        if (instances[i]) {
+          instances[i].destroy();
+          instances[i] = null;
+        }
       }
     });
   });

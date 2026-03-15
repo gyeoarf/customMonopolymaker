@@ -1,4 +1,6 @@
 .action-card-container {
+  width: 432px !important; /* 270 * 1.6 golden ratio for landscape cards */
+  height: 270px !important;
   padding: 10px;
   background: white;
 }

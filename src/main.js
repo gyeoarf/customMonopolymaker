@@ -9,6 +9,7 @@ import { renderPropertyForm, renderPropertyPreview } from './components/Property
 import { renderCurrencyForm, renderCurrencyPreview } from './components/Currency.js';
 import { renderDiceForm, renderDicePreview } from './components/Dice.js';
 import { renderActionCardForm, renderActionCardPreview } from './components/ActionCard.js';
+import { renderSpecialCardForm, renderSpecialCardPreview } from './components/SpecialCard.js';
 import './components/ActionCard.css';
 
 // Centralised State Manager (PubSub Pattern)
@@ -24,6 +25,7 @@ export const appState = {
       textColor: '#000000',
       backgroundColor: '#FFFFFF',
       backgroundImageUrl: null,
+      transform: { x: 0, y: 0, width: 270, height: 410, rotation: 0, flipX: 1, flipY: 1 },
       baseRent: 50,
       house1: 200,
       house2: 600,
@@ -35,27 +37,52 @@ export const appState = {
     },
     chance: {
       text: 'ADVANCE TO GO. (COLLECT $200)',
-      image: null
+      image: null,
+      transform: { x: 0, y: 0, width: 100, height: 100, rotation: 0, flipX: 1, flipY: 1 }
     },
     chest: {
       text: 'BANK ERROR IN YOUR FAVOR. COLLECT $200',
-      image: null
+      image: null,
+      transform: { x: 0, y: 0, width: 100, height: 100, rotation: 0, flipX: 1, flipY: 1 }
     },
     back: {
       backgroundColor: '#E53935',
       image: null,
-      repeatPattern: false
+      repeatPattern: false,
+      transform: { x: 0, y: 0, width: 270, height: 410, rotation: 0, flipX: 1, flipY: 1 }
     },
     currency: {
       denomination: 500,
       backgroundColor: '#f7f9f2',
       backgroundImageUrl: null,
-      transform: { scale: 1, rotate: 0, flipX: 1, flipY: 1 }
+      transform: { x: 0, y: 0, width: 400, height: 210, rotation: 0, flipX: 1, flipY: 1 }
     },
     dice: {
       faces: [null, null, null, null, null, null],
       activeFaceIndex: null, // Track which face is being edited
-      transforms: Array(6).fill({ scale: 1, rotate: 0, flipX: 1, flipY: 1 })
+      transforms: Array(6).fill({ x: 0, y: 0, width: 90, height: 90, rotation: 0, flipX: 1, flipY: 1 })
+    },
+    railroad: {
+      title: 'READING RAILROAD',
+      headerColor: '#000000',
+      headerTextColor: '#FFFFFF',
+      textColor: '#000000',
+      backgroundColor: '#FFFFFF',
+      rent1: 25,
+      rent2: 50,
+      rent3: 100,
+      rent4: 200,
+      mortgage: 100
+    },
+    utility: {
+      title: 'ELECTRIC COMPANY',
+      headerColor: '#000000',
+      headerTextColor: '#FFFFFF',
+      textColor: '#000000',
+      backgroundColor: '#FFFFFF',
+      backgroundImageUrl: null,
+      transform: { x: 0, y: 0, width: 270, height: 410, rotation: 0, flipX: 1, flipY: 1 },
+      mortgage: 75
     }
   },
 
@@ -103,6 +130,12 @@ function renderShell() {
             </li>
             <li class="nav-item" data-menu="card_back">
               <i data-lucide="image"></i> Card Back
+            </li>
+            <li class="nav-item" data-menu="railroad_card">
+              <i data-lucide="play"></i> Railroad
+            </li>
+            <li class="nav-item" data-menu="utility_card">
+              <i data-lucide="play"></i> Utility
             </li>
           </ul>
         </nav>
@@ -199,7 +232,14 @@ function init() {
         renderActionCardForm(formContainer, 'back');
         renderActionCardPreview(previewWorkspace, 'back');
         break;
-      // Add other cases later
+      case 'railroad_card':
+        renderSpecialCardForm(formContainer, 'railroad');
+        renderSpecialCardPreview(previewWorkspace, 'railroad');
+        break;
+      case 'utility_card':
+        renderSpecialCardForm(formContainer, 'utility');
+        renderSpecialCardPreview(previewWorkspace, 'utility');
+        break;
       default:
         formContainer.innerHTML = '<p class="text-muted">Select an item from the menu.</p>';
     }
