@@ -47,3 +47,11 @@ The generator currently supports the following asset types:
 - Card Backs
 - Currency Denominations
 - Custom Dice Faces
+
+## Legal Disclaimer
+
+This project is a fan-made tool and is not affiliated with, endorsed by, or associated with Hasbro, Inc. Monopoly is a trademark of Hasbro, Inc. All assets generated are intended for personal, non-commercial use only.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
