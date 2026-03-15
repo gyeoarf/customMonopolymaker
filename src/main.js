@@ -97,6 +97,15 @@ export const appState = {
     this.events[event].forEach(callback => callback(data));
   },
 
+  // Clear all subscriptions EXCEPT core system ones (menu_changed)
+  clearComponentSubscriptions() {
+    for (const key of Object.keys(this.events)) {
+      if (key !== 'menu_changed') {
+        delete this.events[key];
+      }
+    }
+  },
+
   // State Mutators
   updateState(assetType, key, value) {
     this.assetData[assetType][key] = value;
@@ -203,6 +212,9 @@ function init() {
     // Clear containers
     formContainer.innerHTML = '';
     previewWorkspace.innerHTML = '';
+    
+    // CRITICAL: Clear all component subscriptions to prevent accumulation
+    appState.clearComponentSubscriptions();
     
     // Remove previous specific styling wrappers if necessary
     previewWorkspace.className = 'export-wrapper';

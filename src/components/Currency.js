@@ -79,7 +79,6 @@ export function renderCurrencyPreview(container) {
           <div class="corner bottom-right" id="corner-br">${currency.denomination}</div>
         </div>
       </div>
-      </div>
       <div id="curr-bg-container" style="position:absolute; top:0; left:0; width:100%; height:100%; overflow:hidden; z-index:1;"></div>
     </div>
   `;
