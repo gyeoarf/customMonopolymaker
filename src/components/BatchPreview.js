@@ -171,24 +171,38 @@ function bindBatchInteractions(container) {
   let isPanning = false;
   let startX = 0;
   let startY = 0;
+  let rafId = null;
 
   const updateTransform = () => {
     canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    rafId = null;
+  };
+
+  const requestUpdate = () => {
+    if (!rafId) {
+      rafId = requestAnimationFrame(updateTransform);
+    }
   };
 
   viewport.addEventListener('wheel', (e) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    scale = Math.max(0.2, Math.min(3, scale + delta));
-    updateTransform();
+    const newScale = Math.max(0.1, Math.min(5, scale + delta));
+    
+    // Zoom towards mouse position (approximate for now)
+    // To do it perfectly we'd need to adjust panX/panY too
+    scale = newScale;
+    requestUpdate();
   }, { passive: false });
 
   viewport.addEventListener('mousedown', (e) => {
+    // Only pan if clicking the viewport or canvas background
     if (e.target === viewport || e.target === canvas) {
       isPanning = true;
       startX = e.clientX - panX;
       startY = e.clientY - panY;
       viewport.style.cursor = 'grabbing';
+      e.preventDefault();
     }
   });
 
@@ -196,7 +210,7 @@ function bindBatchInteractions(container) {
     if (!isPanning) return;
     panX = e.clientX - startX;
     panY = e.clientY - startY;
-    updateTransform();
+    requestUpdate();
   };
 
   const onMouseUp = () => {

@@ -64,9 +64,9 @@
   flex-wrap: wrap;
   gap: 24px;
   transform-origin: 0 0;
-  transition: transform 0.05s ease-out;
   align-items: flex-start;
   align-content: flex-start;
+  will-change: transform;
 }
 
 /* Each card wrapper in full batch view — width/height set inline per-type */
