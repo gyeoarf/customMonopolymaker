@@ -173,9 +173,8 @@ export function renderSpecialCardPreview(container, type) {
             <h1 id="sp-preview-title">${escapeHtml(stateRef.title)}</h1>
           </div>
 
-          <div class="card-body" style="text-align: center;">
             <div style="margin: 10px auto;">
-              <img src="/assets/cardselements/train.svg" alt="Train" style="width: 80px; height: auto; filter: ${stateRef.textColor === '#FFFFFF' ? 'invert(1)' : 'none'};" />
+              <img src="assets/cardselements/train.svg" alt="Train" style="width: 80px; height: auto; filter: ${stateRef.textColor === '#FFFFFF' ? 'invert(1)' : 'none'};" />
             </div>
 
             <div class="house-rents" style="text-align: center; margin-top: 6px;">

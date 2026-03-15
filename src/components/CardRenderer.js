@@ -92,7 +92,7 @@ function renderStaticProperty(d) {
 function renderStaticActionCard(d, type) {
   const isChest = type === 'chest';
   const title = isChest ? 'COMMUNITY CHEST' : 'CHANCE';
-  const defaultImg = isChest ? '/assets/cardselements/communitychest.png' : '';
+  const defaultImg = isChest ? 'assets/cardselements/communitychest.png' : '';
   const showDefault = !d.image && isChest;
   const hasCustomImage = d.image && d.image !== 'assets/cardselements/placeholder.jpeg';
 
@@ -142,7 +142,7 @@ function renderStaticRailroad(d) {
         </div>
         <div class="card-body" style="text-align: center;">
           <div style="margin: 10px auto;">
-            <img src="/assets/cardselements/train.svg" alt="Train" style="width: 80px; height: auto; filter: ${d.textColor === '#FFFFFF' ? 'invert(1)' : 'none'};" />
+            <img src="assets/cardselements/train.svg" alt="Train" style="width: 80px; height: auto; filter: ${d.textColor === '#FFFFFF' ? 'invert(1)' : 'none'};" />
           </div>
           <div class="house-rents" style="text-align: center; margin-top: 6px;">
             <div class="grid-row"><span>Rent</span><span>$${escapeHtml(String(d.rent1))}</span></div>

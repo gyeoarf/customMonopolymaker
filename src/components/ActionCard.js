@@ -100,7 +100,7 @@ export function renderActionCardPreview(container, type) {
   if (type === 'chance' || type === 'chest') {
     const isChest = type === 'chest';
     // Chest defaults to traditional chest logo if no custom image
-    const defaultImgSrc = isChest ? '/assets/cardselements/communitychest.png' : '';
+    const defaultImgSrc = isChest ? 'assets/cardselements/communitychest.png' : '';
     
     // We render a standard property card sized container, but formatted differently
     container.innerHTML = `
