@@ -187,7 +187,7 @@ function renderShell() {
 
   createIcons({
     icons: {
-      Plus, ImageIcon, RotateCw, Play, Settings2, Download, MousePointerSquareDashed
+      Plus, Image: ImageIcon, RotateCw, Play, Settings2, Download, MousePointerSquareDashed
     }
   });
   
