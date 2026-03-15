@@ -1,0 +1,65 @@
+/* Dice Grid Styles */
+.dice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 140px);
+  gap: 15px;
+  background-color: transparent;
+  padding: 10px;
+}
+
+.dice-face {
+  aspect-ratio: 1 / 1;
+  background-color: white;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 2px dashed #cbd5e1;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dice-face:hover {
+  border-color: #94a3b8;
+}
+
+.dice-face.active {
+  border: 4px solid var(--primary);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.face-number {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 24px;
+  height: 24px;
+  background: rgba(0,0,0,0.5);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.dice-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: auto;
+  height: auto;
+  min-width: 100%;
+  min-height: 100%;
+  margin-left: -50%;
+  margin-top: -50%;
+  z-index: 1;
+  pointer-events: none;
+  /* transform bound via inline styles */
+}
