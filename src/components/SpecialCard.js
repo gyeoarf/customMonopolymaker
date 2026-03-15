@@ -169,7 +169,7 @@ export function renderSpecialCardPreview(container, type) {
             border-bottom-color: ${stateRef.textColor};
           ">
             <div class="title-deed">RAILROAD</div>
-            <h1 id="sp-preview-title">${stateRef.title}</h1>
+            <h1 id="sp-preview-title">${escapeHtml(stateRef.title)}</h1>
           </div>
 
           <div class="card-body" style="text-align: center;">
@@ -178,14 +178,14 @@ export function renderSpecialCardPreview(container, type) {
             </div>
 
             <div class="house-rents" style="text-align: center; margin-top: 6px;">
-              <div class="grid-row"><span>Rent</span><span>$<span id="sp-r1">${stateRef.rent1}</span></span></div>
-              <div class="grid-row"><span>If 2 R.R.'s are owned</span><span>$<span id="sp-r2">${stateRef.rent2}</span></span></div>
-              <div class="grid-row"><span>If 3 R.R.'s are owned</span><span>$<span id="sp-r3">${stateRef.rent3}</span></span></div>
-              <div class="grid-row"><span>If 4 R.R.'s are owned</span><span>$<span id="sp-r4">${stateRef.rent4}</span></span></div>
+              <div class="grid-row"><span>Rent</span><span>$<span id="sp-r1">${escapeHtml(String(stateRef.rent1))}</span></span></div>
+              <div class="grid-row"><span>If 2 R.R.'s are owned</span><span>$<span id="sp-r2">${escapeHtml(String(stateRef.rent2))}</span></span></div>
+              <div class="grid-row"><span>If 3 R.R.'s are owned</span><span>$<span id="sp-r3">${escapeHtml(String(stateRef.rent3))}</span></span></div>
+              <div class="grid-row"><span>If 4 R.R.'s are owned</span><span>$<span id="sp-r4">${escapeHtml(String(stateRef.rent4))}</span></span></div>
             </div>
 
             <div class="margin-y center building-costs">
-              Mortgage Value $<span id="sp-mortgage">${stateRef.mortgage}</span>
+              Mortgage Value $<span id="sp-mortgage">${escapeHtml(String(stateRef.mortgage))}</span>
             </div>
           </div>
         </div>
@@ -239,7 +239,7 @@ export function renderSpecialCardPreview(container, type) {
             border-bottom-color: ${stateRef.textColor};
           ">
             <div class="title-deed">UTILITY</div>
-            <h1 id="sp-preview-title">${stateRef.title}</h1>
+            <h1 id="sp-preview-title">${escapeHtml(stateRef.title)}</h1>
           </div>
 
           <div class="card-body" style="text-align: center; justify-content: center;">
@@ -248,7 +248,7 @@ export function renderSpecialCardPreview(container, type) {
               <p style="margin-top: 8px;">If both "Utilities" are owned, rent is <strong>10 times</strong> amount shown on dice.</p>
             </div>
             <div class="margin-y center building-costs">
-              Mortgage Value $<span id="sp-mortgage">${stateRef.mortgage}</span>
+              Mortgage Value $<span id="sp-mortgage">${escapeHtml(String(stateRef.mortgage))}</span>
             </div>
           </div>
         </div>

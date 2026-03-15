@@ -176,27 +176,27 @@ export function renderPropertyPreview(container) {
       <div class="card-border" style="border-color: ${property.textColor || '#000000'}; position: relative; z-index: 10; pointer-events: none;">
         <div class="card-header" id="preview-header" style="background-color: ${property.headerColor || '#005CE6'}; color: ${property.headerTextColor || '#FFFFFF'}; border-bottom-color: ${property.textColor || '#000000'};">
           <div class="title-deed">TITLE DEED</div>
-          <h1 id="preview-title">${property.title}</h1>
+          <h1 id="preview-title">${escapeHtml(property.title)}</h1>
         </div>
         
         <div class="card-body">
           <div class="rent-row center">
-            <span>RENT $</span><span id="preview-rent">${property.baseRent}</span><span>.</span>
+            <span>RENT $</span><span id="preview-rent">${escapeHtml(String(property.baseRent))}</span><span>.</span>
           </div>
           
           <div class="house-rents">
-            <div class="grid-row"><span>With 1 House</span> <span>$<span id="preview-h1">${property.house1}</span>.</span></div>
-            <div class="grid-row"><span>With 2 Houses</span> <span>$<span id="preview-h2">${property.house2}</span>.</span></div>
-            <div class="grid-row"><span>With 3 Houses</span> <span>$<span id="preview-h3">${property.house3}</span>.</span></div>
-            <div class="grid-row"><span>With 4 Houses</span> <span>$<span id="preview-h4">${property.house4}</span>.</span></div>
+            <div class="grid-row"><span>With 1 House</span> <span>$<span id="preview-h1">${escapeHtml(String(property.house1))}</span>.</span></div>
+            <div class="grid-row"><span>With 2 Houses</span> <span>$<span id="preview-h2">${escapeHtml(String(property.house2))}</span>.</span></div>
+            <div class="grid-row"><span>With 3 Houses</span> <span>$<span id="preview-h3">${escapeHtml(String(property.house3))}</span>.</span></div>
+            <div class="grid-row"><span>With 4 Houses</span> <span>$<span id="preview-h4">${escapeHtml(String(property.house4))}</span>.</span></div>
           </div>
           
           <div class="hotel-rent center margin-y">
-            <span>With HOTEL $<span id="preview-hotel">${property.hotel}</span>.</span>
+            <span>With HOTEL $<span id="preview-hotel">${escapeHtml(String(property.hotel))}</span>.</span>
           </div>
           
           <div class="mortgage-val center margin-y">
-            <span>Mortgage Value $<span id="preview-mortgage">${property.mortgage}</span>.</span>
+            <span>Mortgage Value $<span id="preview-mortgage">${escapeHtml(String(property.mortgage))}</span>.</span>
           </div>
           
           <div class="building-costs center">

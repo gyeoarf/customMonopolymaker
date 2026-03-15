@@ -65,18 +65,19 @@ export function renderCurrencyForm(container) {
 
 export function renderCurrencyPreview(container) {
   const { currency } = appState.assetData;
+  const den = escapeHtml(String(currency.denomination));
   
   container.innerHTML = `
     <div class="currency-bill" id="curr-preview" style="background-color: ${currency.backgroundColor}">
       <div class="bill-border">
         <div class="bill-inner-border">
-          <div class="corner top-left" id="corner-tl">${currency.denomination}</div>
-          <div class="corner top-right" id="corner-tr">${currency.denomination}</div>
+          <div class="corner top-left" id="corner-tl">${den}</div>
+          <div class="corner top-right" id="corner-tr">${den}</div>
           
-          <div class="center-denomination" id="center-val">${currency.denomination}</div>
+          <div class="center-denomination" id="center-val">${den}</div>
           
-          <div class="corner bottom-left" id="corner-bl">${currency.denomination}</div>
-          <div class="corner bottom-right" id="corner-br">${currency.denomination}</div>
+          <div class="corner bottom-left" id="corner-bl">${den}</div>
+          <div class="corner bottom-right" id="corner-br">${den}</div>
         </div>
       </div>
       <div id="curr-bg-container" style="position:absolute; top:0; left:0; width:100%; height:100%; overflow:hidden; z-index:1;"></div>

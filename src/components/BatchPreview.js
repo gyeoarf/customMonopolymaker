@@ -1,5 +1,6 @@
 import { appState } from '../main.js';
 import { renderStaticCard, getCardDimensions } from './CardRenderer.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 /**
  * Renders the full-size batch preview (for the toggle view).
@@ -37,8 +38,8 @@ export function renderBatchPreview(container) {
                 ${renderStaticCard(card.type, card.data)}
               </div>
               <div class="batch-card-label" style="width:${scaledW}px;">
-                <span class="batch-card-type">${getTypeBadge(card.type)}</span>
-                <span class="batch-card-name">${getCardTitle(card)}</span>
+                <span class="batch-card-type">${escapeHtml(getTypeBadge(card.type))}</span>
+                <span class="batch-card-name">${escapeHtml(getCardTitle(card))}</span>
               </div>
             </div>
           `}).join('')}
@@ -76,8 +77,9 @@ export function renderBatchStrip(container) {
           const scale = 0.25;
           const scaledW = dim.width * scale;
           const scaledH = dim.height * scale;
+          const titleEscaped = escapeHtml(getCardTitle(card));
           return `
-          <div class="strip-card ${appState.selectedBatchCardId === card.id ? 'selected' : ''}" data-card-id="${card.id}" title="${getCardTitle(card)}" style="width:${scaledW}px; height:${scaledH}px;">
+          <div class="strip-card ${appState.selectedBatchCardId === card.id ? 'selected' : ''}" data-card-id="${card.id}" title="${titleEscaped}" style="width:${scaledW}px; height:${scaledH}px;">
             <button class="strip-card-delete" data-delete-id="${card.id}">&times;</button>
             <div class="strip-card-rendered" style="width:${dim.width}px; height:${dim.height}px;">
               ${renderStaticCard(card.type, card.data)}

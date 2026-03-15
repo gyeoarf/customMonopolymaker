@@ -1,5 +1,6 @@
 import { appState } from '../main.js';
 import { createInteractableImage } from './InteractableImage.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 export function renderActionCardForm(container, type) { // type can be 'chance', 'chest', or 'back'
   const stateRef = appState.assetData[type];
@@ -16,7 +17,7 @@ export function renderActionCardForm(container, type) { // type can be 'chance',
     formHtml += `
       <div class="form-group">
         <label>Instruction Text</label>
-        <textarea id="ac-text" rows="4" style="resize:vertical; padding:8px; border:1px solid #cbd5e1; border-radius:4px;">${stateRef.text}</textarea>
+        <textarea id="ac-text" rows="4" style="resize:vertical; padding:8px; border:1px solid #cbd5e1; border-radius:4px;">${escapeHtml(stateRef.text)}</textarea>
       </div>
       
       <div class="form-group">
@@ -113,7 +114,7 @@ export function renderActionCardPreview(container, type) {
           </div>
 
           <div class="action-body" id="preview-ac-text">
-            ${stateRef.text.replace(/\\n/g, '<br/>')}
+            ${escapeHtml(stateRef.text || '').replace(/\\n/g, '<br/>')}
           </div>
         </div>
       </div>
@@ -122,10 +123,15 @@ export function renderActionCardPreview(container, type) {
     let interactableInstance = null;
 
     appState.subscribe(`${type}_updated`, (data) => {
-      document.getElementById('preview-ac-text').innerHTML = data.text.replace(/\\n/g, '<br/>');
+      const textEl = document.getElementById('preview-ac-text');
+      if (textEl) {
+        textEl.innerHTML = escapeHtml(data.text || '').replace(/\\n/g, '<br/>');
+      }
       
       const defaultImg = document.getElementById('preview-ac-img-default');
       const containerEl = document.getElementById('preview-ac-img-container');
+
+      if (!containerEl || !defaultImg) return;
 
       if (data.image) {
         defaultImg.style.display = 'none';
@@ -169,6 +175,7 @@ export function renderActionCardPreview(container, type) {
       if (outerEl) outerEl.style.backgroundColor = data.backgroundColor;
 
       const bgContainer = document.getElementById('preview-back-bg');
+      if (!bgContainer) return;
       
       if (data.image) {
         if (!interactableInstanceBack) {
