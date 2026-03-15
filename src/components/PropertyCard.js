@@ -1,5 +1,6 @@
 import { appState } from '../main.js';
 import { createInteractableImage } from './InteractableImage.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 export function renderPropertyForm(container) {
   const { property } = appState.assetData;

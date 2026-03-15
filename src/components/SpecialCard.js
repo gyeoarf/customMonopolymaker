@@ -1,5 +1,6 @@
 import { appState } from '../main.js';
 import { createInteractableImage } from './InteractableImage.js';
+import { escapeHtml } from '../utils/sanitize.js';
 
 export function renderSpecialCardForm(container, type) {
   const stateRef = appState.assetData[type];
