@@ -34,6 +34,9 @@ export function renderBatchPreview(container) {
             return `
             <div class="batch-card-wrapper ${appState.selectedBatchCardId === card.id ? 'selected' : ''}" data-card-id="${card.id}" style="width:${scaledW}px; height:${scaledH + 36}px;">
               <button class="batch-card-delete" data-delete-id="${card.id}" title="Remove from batch">&times;</button>
+              <button class="batch-card-duplicate" data-dup-id="${card.id}" title="Duplicate card">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+              </button>
               <div class="batch-card-rendered" style="width:${dim.width}px; height:${dim.height}px;">
                 ${renderStaticCard(card.type, card.data)}
               </div>
@@ -147,6 +150,14 @@ function bindBatchInteractions(container) {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       appState.removeBatchCard(e.currentTarget.dataset.deleteId);
+    });
+  });
+
+  // Duplicate buttons
+  container.querySelectorAll('.batch-card-duplicate').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      appState.duplicateBatchCard(e.currentTarget.dataset.dupId);
     });
   });
 

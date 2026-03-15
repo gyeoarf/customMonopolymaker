@@ -160,6 +160,34 @@
   transform: scale(1.15);
 }
 
+.batch-card-duplicate {
+  position: absolute;
+  top: -6px;
+  right: 22px; /* Next to delete button */
+  z-index: 20;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #1e293b;
+  border-radius: 50%;
+  background: #3b82f6;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.15s ease;
+}
+
+.batch-card-wrapper:hover .batch-card-duplicate {
+  opacity: 1;
+}
+
+.batch-card-duplicate:hover {
+  background: #2563eb;
+  transform: scale(1.15);
+}
+
 
 /* ============================================
    BOTTOM BATCH STRIP (always visible)

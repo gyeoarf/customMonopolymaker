@@ -209,6 +209,22 @@ export const appState = {
   deselectBatchCard() {
     this.selectedBatchCardId = null;
     this.publish('batch_updated', this.batchCards);
+  },
+
+  duplicateBatchCard(id) {
+    const cardIndex = this.batchCards.findIndex(c => c.id === id);
+    if (cardIndex === -1) return;
+    
+    const original = this.batchCards[cardIndex];
+    const duplicate = {
+      ...original,
+      id: `card_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      data: JSON.parse(JSON.stringify(original.data))
+    };
+    
+    // Insert after the original
+    this.batchCards.splice(cardIndex + 1, 0, duplicate);
+    this.publish('batch_updated', this.batchCards);
   }
 };
 
