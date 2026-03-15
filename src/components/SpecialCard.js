@@ -299,5 +299,8 @@ export function renderSpecialCardPreview(container, type) {
         }
       }
     });
+
+    // Immediately trigger with current data to handle images already in state (e.g. batch card loaded)
+    appState.publish('utility_updated', appState.assetData.utility);
   }
 }

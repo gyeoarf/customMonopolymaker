@@ -150,6 +150,9 @@ export function renderActionCardPreview(container, type) {
       }
     });
 
+    // Immediately trigger with current data to handle images already in state (e.g. batch card loaded)
+    appState.publish(`${type}_updated`, appState.assetData[type]);
+
   } else if (type === 'back') {
     container.innerHTML = `
       <div class="property-card action-card-container" style="background-color: ${stateRef.backgroundColor}; position: relative; overflow: hidden;">
@@ -186,5 +189,8 @@ export function renderActionCardPreview(container, type) {
         }
       }
     });
+
+    // Immediately trigger with current data to handle images already in state (e.g. batch card loaded)
+    appState.publish('back_updated', appState.assetData.back);
   }
 }

@@ -2,7 +2,8 @@ import './style.css';
 import './components/PropertyCard.css';
 import './components/Currency.css';
 import './components/Dice.css';
-import { createIcons, Plus, Image as ImageIcon, RotateCw, Play, Settings2, Download, MousePointerSquareDashed } from 'lucide';
+import './components/BatchPreview.css';
+import { createIcons, Plus, Image as ImageIcon, RotateCw, Play, Settings2, Download, MousePointerSquareDashed, Upload, FolderDown, PackagePlus } from 'lucide';
 import html2canvas from 'html2canvas';
 
 import { renderPropertyForm, renderPropertyPreview } from './components/PropertyCard.js';
@@ -10,12 +11,18 @@ import { renderCurrencyForm, renderCurrencyPreview } from './components/Currency
 import { renderDiceForm, renderDicePreview } from './components/Dice.js';
 import { renderActionCardForm, renderActionCardPreview } from './components/ActionCard.js';
 import { renderSpecialCardForm, renderSpecialCardPreview } from './components/SpecialCard.js';
+import { renderBatchPreview, renderBatchStrip } from './components/BatchPreview.js';
+import { getProjectJsonString, exportProjectJsonFile, importProjectJson } from './components/JsonIO.js';
+import { exportBatchAsZip } from './components/ZipExport.js';
 import './components/ActionCard.css';
 
 // Centralised State Manager (PubSub Pattern)
 export const appState = {
   activeMenu: 'property_card', // Default view
   events: {},
+  projectName: '',
+  batchCards: [],           // Array of { id, type, data, timestamp }
+  selectedBatchCardId: null,
   
   assetData: {
     property: {
@@ -110,17 +117,108 @@ export const appState = {
   updateState(assetType, key, value) {
     this.assetData[assetType][key] = value;
     this.publish(`${assetType}_updated`, this.assetData[assetType]);
+
+    // If we are editing a selected batch card, sync updates
+    if (this.selectedBatchCardId) {
+      const card = this.batchCards.find(c => c.id === this.selectedBatchCardId);
+      if (card && card.type === assetType) {
+        card.data = JSON.parse(JSON.stringify(this.assetData[assetType]));
+        this.publish('batch_updated', this.batchCards);
+      }
+    }
   },
   
   setActiveMenu(menuId) {
     this.activeMenu = menuId;
     this.publish('menu_changed', this.activeMenu);
+  },
+
+  // --- Batch Methods ---
+
+  /** Maps sidebar menuId => assetData key */
+  menuToAssetType(menuId) {
+    const map = {
+      'property_card': 'property',
+      'chance_card': 'chance',
+      'chest_card': 'chest',
+      'card_back': 'back',
+      'railroad_card': 'railroad',
+      'utility_card': 'utility',
+      'currency': 'currency',
+      'dice': 'dice'
+    };
+    return map[menuId] || menuId;
+  },
+
+  /** Maps assetData type => sidebar menuId */
+  assetTypeToMenu(type) {
+    const map = {
+      'property': 'property_card',
+      'chance': 'chance_card',
+      'chest': 'chest_card',
+      'back': 'card_back',
+      'railroad': 'railroad_card',
+      'utility': 'utility_card',
+      'currency': 'currency',
+      'dice': 'dice'
+    };
+    return map[type] || type;
+  },
+
+  addToBatch() {
+    const assetType = this.menuToAssetType(this.activeMenu);
+    const snapshot = JSON.parse(JSON.stringify(this.assetData[assetType]));
+    const card = {
+      id: crypto.randomUUID(),
+      type: assetType,
+      data: snapshot,
+      timestamp: Date.now()
+    };
+    this.batchCards.push(card);
+    this.publish('batch_updated', this.batchCards);
+  },
+
+  removeBatchCard(id) {
+    this.batchCards = this.batchCards.filter(c => c.id !== id);
+    if (this.selectedBatchCardId === id) {
+      this.selectedBatchCardId = null;
+    }
+    this.publish('batch_updated', this.batchCards);
+  },
+
+  selectBatchCard(id) {
+    const card = this.batchCards.find(c => c.id === id);
+    if (!card) return;
+    
+    this.selectedBatchCardId = id;
+    // Load data into editor
+    this.assetData[card.type] = JSON.parse(JSON.stringify(card.data));
+    
+    // Switch to the correct menu
+    const menuId = this.assetTypeToMenu(card.type);
+    
+    // Update nav UI
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    const targetNav = document.querySelector(`.nav-item[data-menu="${menuId}"]`);
+    if (targetNav) targetNav.classList.add('active');
+    
+    this.setActiveMenu(menuId);
+    this.publish('batch_updated', this.batchCards);
+  },
+
+  deselectBatchCard() {
+    this.selectedBatchCardId = null;
+    this.publish('batch_updated', this.batchCards);
   }
 };
 
 // Bootstrap the core shell UI
 function renderShell() {
   document.querySelector('#app').innerHTML = `
+    <div class="top-bar">
+      <label for="project-name-input" class="top-bar-label">Project Name:</label>
+      <input type="text" id="project-name-input" class="top-bar-input" placeholder="My Custom Monopoly" value="${appState.projectName}" />
+    </div>
     <div class="app-container">
       <aside class="sidebar">
         <h1 class="brand">Monopoly Maker</h1>
@@ -160,6 +258,18 @@ function renderShell() {
             </li>
           </ul>
         </nav>
+
+        <nav class="nav-group">
+          <h2>Project</h2>
+          <ul>
+            <li class="nav-item" id="btn-export-json">
+              <i data-lucide="download"></i> Export JSON
+            </li>
+            <li class="nav-item" id="btn-import-json">
+              <i data-lucide="upload"></i> Import JSON
+            </li>
+          </ul>
+        </nav>
       </aside>
       
       <main class="workspace">
@@ -169,10 +279,25 @@ function renderShell() {
         
         <section class="preview-panel">
           <header class="preview-header">
-            <h2>Live Preview</h2>
-            <button id="btn-export" class="btn-primary">
-              <i data-lucide="download"></i> Export as PNG
-            </button>
+            <div class="preview-toggle-group">
+              <div class="preview-toggle" id="preview-toggle">
+                <button class="toggle-btn active" data-mode="live">Live Preview</button>
+                <button class="toggle-btn" data-mode="batch">Batch Preview</button>
+                <div class="toggle-slider"></div>
+              </div>
+              <span class="batch-count" id="batch-count"></span>
+            </div>
+            <div class="preview-header-actions">
+              <button id="btn-add-batch" class="btn-primary btn-batch">
+                <i data-lucide="package-plus"></i> Create and add to batch
+              </button>
+              <button id="btn-export" class="btn-primary">
+                <i data-lucide="download"></i> Export as PNG
+              </button>
+              <button id="btn-export-zip" class="btn-primary btn-zip">
+                <i data-lucide="folder-down"></i> Export all as ZIP
+              </button>
+            </div>
           </header>
           
           <div class="preview-workspace" id="preview-workspace">
@@ -180,25 +305,253 @@ function renderShell() {
               <!-- Active Preview Injected Here -->
             </div>
           </div>
+
+          <div class="preview-workspace batch-workspace" id="batch-workspace" style="display:none;">
+            <div id="batch-preview-container" class="batch-preview-fullsize">
+              <!-- Batch Preview Injected Here -->
+            </div>
+          </div>
+
+          <div id="batch-strip-container" class="batch-strip">
+            <!-- Bottom Batch Strip Injected Here -->
+          </div>
         </section>
       </main>
+    </div>
+
+    <!-- Hidden input for JSON import -->
+    <input type="file" id="json-import-input" accept=".json" style="display:none" />
+
+    <!-- Project name modal -->
+    <div id="project-name-modal" class="modal-overlay" style="display:none;">
+      <div class="modal-content">
+        <h3>Enter Project Name</h3>
+        <p>A project name is required before exporting.</p>
+        <input type="text" id="modal-project-name" class="modal-input" placeholder="My Custom Monopoly" />
+        <div class="modal-actions">
+          <button id="modal-cancel" class="btn-secondary">Cancel</button>
+          <button id="modal-confirm" class="btn-primary">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- JSON Export modal -->
+    <div id="json-export-modal" class="modal-overlay" style="display:none;">
+      <div class="modal-content modal-wide">
+        <h3>Export JSON</h3>
+        <p>Download as file or copy the text below.</p>
+        <textarea id="json-export-text" class="modal-textarea" readonly></textarea>
+        <div class="modal-actions">
+          <button id="json-export-close" class="btn-secondary">Close</button>
+          <button id="json-export-copy" class="btn-primary">Copy to Clipboard</button>
+          <button id="json-export-download" class="btn-primary">Download File</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- JSON Import modal -->
+    <div id="json-import-modal" class="modal-overlay" style="display:none;">
+      <div class="modal-content modal-wide">
+        <h3>Import JSON</h3>
+        <p>Paste JSON text below, or load from a file.</p>
+        <textarea id="json-import-text" class="modal-textarea" placeholder="Paste your JSON here..."></textarea>
+        <div class="modal-actions">
+          <button id="json-import-close" class="btn-secondary">Cancel</button>
+          <button id="json-import-file" class="btn-primary">Load from File</button>
+          <button id="json-import-paste" class="btn-primary btn-batch">Import from Text</button>
+        </div>
+      </div>
     </div>
   `;
 
   createIcons({
     icons: {
-      Plus, Image: ImageIcon, RotateCw, Play, Settings2, Download, MousePointerSquareDashed
+      Plus, Image: ImageIcon, RotateCw, Play, Settings2, Download, MousePointerSquareDashed,
+      Upload, FolderDown, PackagePlus
     }
   });
   
   // Bind Navigation
-  document.querySelectorAll('.nav-item').forEach(item => {
+  document.querySelectorAll('.nav-item[data-menu]').forEach(item => {
     item.addEventListener('click', (e) => {
       document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
       e.currentTarget.classList.add('active');
+      appState.deselectBatchCard();
       appState.setActiveMenu(e.currentTarget.dataset.menu);
     });
   });
+
+  // Bind project name input
+  document.getElementById('project-name-input').addEventListener('input', (e) => {
+    appState.projectName = e.target.value;
+  });
+
+  // Bind JSON Export (modal with copy + download)
+  document.getElementById('btn-export-json').addEventListener('click', () => {
+    const modal = document.getElementById('json-export-modal');
+    const textarea = document.getElementById('json-export-text');
+    textarea.value = getProjectJsonString();
+    modal.style.display = 'flex';
+  });
+
+  document.getElementById('json-export-close').addEventListener('click', () => {
+    document.getElementById('json-export-modal').style.display = 'none';
+  });
+
+  document.getElementById('json-export-copy').addEventListener('click', () => {
+    const text = document.getElementById('json-export-text').value;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = document.getElementById('json-export-copy');
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = 'Copy to Clipboard'; }, 2000);
+    });
+  });
+
+  document.getElementById('json-export-download').addEventListener('click', () => {
+    exportProjectJsonFile();
+    document.getElementById('json-export-modal').style.display = 'none';
+  });
+
+  // Bind JSON Import (modal with paste + file)
+  const jsonImportInput = document.getElementById('json-import-input');
+
+  document.getElementById('btn-import-json').addEventListener('click', () => {
+    const modal = document.getElementById('json-import-modal');
+    document.getElementById('json-import-text').value = '';
+    modal.style.display = 'flex';
+  });
+
+  document.getElementById('json-import-close').addEventListener('click', () => {
+    document.getElementById('json-import-modal').style.display = 'none';
+  });
+
+  document.getElementById('json-import-file').addEventListener('click', () => {
+    jsonImportInput.click();
+  });
+
+  jsonImportInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      if (importProjectJson(ev.target.result)) {
+        document.getElementById('project-name-input').value = appState.projectName;
+        appState.publish('batch_updated', appState.batchCards);
+        document.getElementById('json-import-modal').style.display = 'none';
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  document.getElementById('json-import-paste').addEventListener('click', () => {
+    const text = document.getElementById('json-import-text').value.trim();
+    if (!text) {
+      document.getElementById('json-import-text').style.borderColor = '#ef4444';
+      return;
+    }
+    if (importProjectJson(text)) {
+      document.getElementById('project-name-input').value = appState.projectName;
+      appState.publish('batch_updated', appState.batchCards);
+      document.getElementById('json-import-modal').style.display = 'none';
+    }
+  });
+
+  // Bind "Create and add to batch"
+  document.getElementById('btn-add-batch').addEventListener('click', () => {
+    appState.addToBatch();
+    updateBatchCount();
+  });
+
+  // Bind ZIP export
+  document.getElementById('btn-export-zip').addEventListener('click', () => {
+    if (!appState.projectName.trim()) {
+      showProjectNameModal(() => {
+        exportBatchAsZip();
+      });
+    } else {
+      exportBatchAsZip();
+    }
+  });
+
+  // Bind Preview Toggle (Live <-> Batch)
+  const toggleBtns = document.querySelectorAll('#preview-toggle .toggle-btn');
+  const pngExportBtn = document.getElementById('btn-export');
+  toggleBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const mode = btn.dataset.mode;
+      toggleBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const slider = document.querySelector('#preview-toggle .toggle-slider');
+      const liveWs = document.getElementById('preview-workspace');
+      const batchWs = document.getElementById('batch-workspace');
+
+      if (mode === 'batch') {
+        slider.style.transform = 'translateX(100%)';
+        liveWs.style.display = 'none';
+        batchWs.style.display = 'flex';
+        // Disable PNG export in batch mode
+        pngExportBtn.disabled = true;
+        pngExportBtn.style.opacity = '0.4';
+        pngExportBtn.style.cursor = 'not-allowed';
+      } else {
+        slider.style.transform = 'translateX(0)';
+        liveWs.style.display = 'flex';
+        batchWs.style.display = 'none';
+        // Re-enable PNG export in live mode
+        pngExportBtn.disabled = false;
+        pngExportBtn.style.opacity = '1';
+        pngExportBtn.style.cursor = 'pointer';
+      }
+    });
+  });
+
+  // Subscribe to batch_updated to keep counter in sync
+  appState.subscribe('batch_updated', () => updateBatchCount());
+}
+
+function updateBatchCount() {
+  const el = document.getElementById('batch-count');
+  if (el) {
+    const n = appState.batchCards.length;
+    el.textContent = n > 0 ? `(${n} card${n !== 1 ? 's' : ''})` : '';
+  }
+}
+
+// Project name modal helper
+function showProjectNameModal(onConfirm) {
+  const modal = document.getElementById('project-name-modal');
+  const input = document.getElementById('modal-project-name');
+  const cancelBtn = document.getElementById('modal-cancel');
+  const confirmBtn = document.getElementById('modal-confirm');
+
+  modal.style.display = 'flex';
+  input.value = '';
+  input.focus();
+
+  const cleanup = () => {
+    modal.style.display = 'none';
+    cancelBtn.removeEventListener('click', onCancel);
+    confirmBtn.removeEventListener('click', onConfirmClick);
+  };
+
+  const onCancel = () => cleanup();
+
+  const onConfirmClick = () => {
+    const name = input.value.trim();
+    if (!name) {
+      input.style.borderColor = '#ef4444';
+      return;
+    }
+    appState.projectName = name;
+    document.getElementById('project-name-input').value = name;
+    cleanup();
+    if (onConfirm) onConfirm();
+  };
+
+  cancelBtn.addEventListener('click', onCancel);
+  confirmBtn.addEventListener('click', onConfirmClick);
 }
 
 // Initialize Application
@@ -255,12 +608,17 @@ function init() {
       default:
         formContainer.innerHTML = '<p class="text-muted">Select an item from the menu.</p>';
     }
+
+    // Re-subscribe batch preview and strip (they were cleared above)
+    renderBatchPreview(document.getElementById('batch-preview-container'));
+    renderBatchStrip(document.getElementById('batch-strip-container'));
+    updateBatchCount();
   });
 
   // Kickoff default state
   appState.publish('menu_changed', appState.activeMenu);
 
-  // Bind Export Logic
+  // Bind Export Logic (single card PNG)
   document.getElementById('btn-export').addEventListener('click', () => {
     const exportNode = document.getElementById('export-wrapper');
     html2canvas(exportNode, {

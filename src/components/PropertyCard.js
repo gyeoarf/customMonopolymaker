@@ -259,4 +259,7 @@ export function renderPropertyPreview(container) {
     document.getElementById('preview-build').textContent = data.buildingCost;
     document.getElementById('preview-build-hotel').textContent = data.buildingCost;
   });
+
+  // Immediately trigger with current data to handle images already in state (e.g. batch card loaded)
+  appState.publish('property_updated', appState.assetData.property);
 }
