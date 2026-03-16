@@ -308,6 +308,116 @@
   background: #dc2626;
 }
 
+/* ---- Link from Batch ---- */
+.board-link-batch-section {
+  background: rgba(59, 130, 246, 0.06);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.board-link-batch-section h3 {
+  font-size: 12px;
+  margin-bottom: 8px;
+  color: var(--primary, #3b82f6);
+}
+
+.btn-link-batch {
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--primary, #3b82f6);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s;
+}
+
+.btn-link-batch:hover {
+  background: var(--primary-hover, #2563eb);
+}
+
+.board-link-status {
+  font-size: 11px;
+  color: var(--text-light, #94a3b8);
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.board-link-status strong {
+  color: var(--text-dark, #e2e8f0);
+}
+
+.btn-unlink {
+  padding: 2px 8px;
+  font-size: 10px;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-unlink:hover {
+  background: #dc2626;
+}
+
+.board-link-empty {
+  font-size: 11px;
+  color: var(--text-muted, #64748b);
+  margin: 0;
+}
+
+.board-link-empty a {
+  color: var(--primary, #3b82f6);
+}
+
+/* ---- Board Rotation Controls ---- */
+.board-rotate-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+}
+
+.board-rotate-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-light, #e2e8f0);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.board-rotate-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.board-rotate-btn.active {
+  background: var(--primary, #3b82f6);
+  border-color: var(--primary, #3b82f6);
+  color: #fff;
+}
+
+.board-rotate-label {
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
+  margin-right: 4px;
+}
+
 /* ============================================
    Board Page — Standalone Layout
    ============================================ */

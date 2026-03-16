@@ -44,6 +44,7 @@ const subscribers = {};
 
 export const boardAppState = {
   board: loadBoardState() || createDefaultBoardState(),
+  boardRotation: 0, // 0, 90, 180, 270
 
   subscribe(event, callback) {
     if (!subscribers[event]) subscribers[event] = [];
@@ -59,6 +60,11 @@ export const boardAppState = {
   updateBoardSpace(index, key, value) {
     this.board.spaces[index][key] = value;
     this.publish('board_updated', this.board);
+  },
+
+  setBoardRotation(degrees) {
+    this.boardRotation = degrees;
+    this.publish('rotation_changed', degrees);
   }
 };
 
@@ -97,6 +103,13 @@ function initBoardApp() {
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         <span>Download PNG</span>
       </button>
+      <div class="board-rotate-controls">
+        <span class="board-rotate-label">Rotate:</span>
+        <button class="board-rotate-btn active" data-rotation="0" title="0°">0°</button>
+        <button class="board-rotate-btn" data-rotation="90" title="90°">90°</button>
+        <button class="board-rotate-btn" data-rotation="180" title="180°">180°</button>
+        <button class="board-rotate-btn" data-rotation="270" title="270°">270°</button>
+      </div>
     </div>
     <div class="app-container">
       <div class="board-form-panel" id="board-form-panel">
@@ -150,6 +163,17 @@ function initBoardApp() {
 
   // Bind download button
   document.getElementById('board-download-png').addEventListener('click', downloadBoardPng);
+
+  // Bind rotation buttons
+  document.querySelectorAll('.board-rotate-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const deg = parseInt(btn.dataset.rotation, 10);
+      boardAppState.setBoardRotation(deg);
+      // Update active state
+      document.querySelectorAll('.board-rotate-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
 
   // Bind JSON Export
   document.getElementById('board-export-json').addEventListener('click', () => {
@@ -301,11 +325,15 @@ async function downloadBoardPng() {
     return;
   }
 
-  // Temporarily reset transform for clean capture
+  // Temporarily reset transforms (including rotation on inner board) for clean capture
   const savedTransform = exportWrapper.style.transform;
   const savedOrigin = exportWrapper.style.transformOrigin;
+  const savedBoardTransform = boardEl.style.transform;
+  const savedBoardOrigin = boardEl.style.transformOrigin;
   exportWrapper.style.transform = 'none';
   exportWrapper.style.transformOrigin = '';
+  boardEl.style.transform = 'none';
+  boardEl.style.transformOrigin = '';
 
   try {
     const canvas = await html2canvas(boardEl, {
@@ -330,6 +358,8 @@ async function downloadBoardPng() {
   } finally {
     exportWrapper.style.transform = savedTransform;
     exportWrapper.style.transformOrigin = savedOrigin;
+    boardEl.style.transform = savedBoardTransform;
+    boardEl.style.transformOrigin = savedBoardOrigin;
   }
 }
 

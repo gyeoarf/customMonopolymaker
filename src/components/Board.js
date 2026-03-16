@@ -14,6 +14,31 @@ import { escapeHtml } from '../utils/sanitize.js';
 import { renderStaticBoard } from './BoardRenderer.js';
 import { CORNER_INDICES, createDefaultSpace, getSpaceLabel } from '../data/defaultBoard.js';
 
+// ============================================================
+//  Batch card linking — reads batch cards from main app localStorage
+// ============================================================
+const MAIN_STORAGE_KEY = 'customMonopoly_appState';
+
+function getBatchCards() {
+  try {
+    const raw = localStorage.getItem(MAIN_STORAGE_KEY);
+    if (!raw) return [];
+    const state = JSON.parse(raw);
+    return Array.isArray(state.batchCards) ? state.batchCards : [];
+  } catch (e) {
+    return [];
+  }
+}
+
+function getBatchCardsForSpaceType(spaceType) {
+  const batchCards = getBatchCards();
+  // Map board space types to batch card types
+  const typeMap = { property: 'property', railroad: 'railroad', utility: 'utility' };
+  const batchType = typeMap[spaceType];
+  if (!batchType) return [];
+  return batchCards.filter(c => c.type === batchType);
+}
+
 // Track document-level listeners for cleanup
 let _docMoveHandler = null;
 let _docUpHandler = null;
@@ -86,8 +111,20 @@ export function renderBoardPreview(container) {
   panX = Math.max(20, (wsRect.width - boardVisualW) / 2);
   panY = Math.max(20, (wsRect.height - boardVisualH) / 2);
 
+  const getRotation = () => boardAppState.boardRotation || 0;
+
+  const applyBoardRotation = () => {
+    const boardEl = container.querySelector('.monopoly-board');
+    if (boardEl) {
+      const rot = getRotation();
+      boardEl.style.transformOrigin = 'center center';
+      boardEl.style.transform = rot ? `rotate(${rot}deg)` : '';
+    }
+  };
+
   const updateTransform = () => {
     container.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    applyBoardRotation();
     rafId = null;
   };
 
@@ -155,6 +192,12 @@ export function renderBoardPreview(container) {
     highlightSpace(container, data.selectedSpaceIndex);
     container.style.transformOrigin = 'top left';
     container.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    applyBoardRotation();
+  });
+
+  // ---- Subscribe to rotation changes ----
+  boardAppState.subscribe('rotation_changed', () => {
+    applyBoardRotation();
   });
 }
 
@@ -363,12 +406,48 @@ function renderNonCornerForm(container, idx, space) {
     `;
   }
 
+  // Build "Link from Batch" section for linkable types
+  let linkBatchSection = '';
+  const linkableTypes = ['property', 'railroad', 'utility'];
+  if (linkableTypes.includes(space.type)) {
+    const matchingCards = getBatchCardsForSpaceType(space.type);
+    const linkedId = space.linkedBatchCardId || '';
+    if (matchingCards.length > 0) {
+      const cardOptions = matchingCards.map(c => {
+        const label = escapeHtml(c.data.title || c.data.name || c.type);
+        const sel = c.id === linkedId ? ' selected' : '';
+        return `<option value="${c.id}"${sel}>${label}</option>`;
+      }).join('');
+      linkBatchSection = `
+        <div class="board-form-section board-link-batch-section">
+          <h3>Link from Batch</h3>
+          <div class="board-form-row">
+            <select class="board-space-select" id="sf-link-batch" style="flex:1;">
+              <option value="">— Select a card —</option>
+              ${cardOptions}
+            </select>
+            <button class="btn-link-batch" id="sf-link-batch-apply" title="Apply card data to this space">Apply</button>
+          </div>
+          ${linkedId ? `<div class="board-link-status">Linked to: <strong>${escapeHtml(matchingCards.find(c => c.id === linkedId)?.data.title || '?')}</strong> <button class="btn-unlink" id="sf-unlink-batch" title="Remove link">Unlink</button></div>` : ''}
+        </div>
+      `;
+    } else {
+      linkBatchSection = `
+        <div class="board-form-section board-link-batch-section">
+          <h3>Link from Batch</h3>
+          <p class="board-link-empty">No ${space.type} cards in batch. Create some in the <a href="index.html">Card Generator</a> first.</p>
+        </div>
+      `;
+    }
+  }
+
   container.innerHTML = `
     <div class="board-form-section">
       <div class="board-form-row">
         <label>Type</label>
         <select class="board-type-select" id="sf-type">${typeOptions}</select>
       </div>
+      ${linkBatchSection}
       <div class="board-form-row">
         <label>Name</label>
         <input type="text" id="sf-name" value="${escapeHtml(space.name || '')}" />
@@ -420,6 +499,47 @@ function renderNonCornerForm(container, idx, space) {
 
   bindFileInput('sf-image', idx, 'image');
   bindClearButton('sf-image-clear', idx, 'image');
+
+  // ---- Batch linking events ----
+  const applyBtn = document.getElementById('sf-link-batch-apply');
+  if (applyBtn) {
+    applyBtn.addEventListener('click', () => {
+      const select = document.getElementById('sf-link-batch');
+      const cardId = select ? select.value : '';
+      if (!cardId) return;
+
+      const batchCards = getBatchCards();
+      const card = batchCards.find(c => c.id === cardId);
+      if (!card) return;
+
+      // Apply card data to the board space
+      const spaceRef = boardAppState.board.spaces[idx];
+      spaceRef.name = card.data.title || card.data.name || spaceRef.name;
+      spaceRef.linkedBatchCardId = cardId;
+
+      if (card.type === 'property') {
+        spaceRef.color = card.data.headerColor || spaceRef.color;
+      }
+
+      // Copy background image if available
+      if (card.data.backgroundImageUrl) {
+        spaceRef.image = card.data.backgroundImageUrl;
+      }
+
+      boardAppState.publish('board_updated', boardAppState.board);
+      renderSpaceForm(boardAppState.board);
+      updateSpaceSelectLabel(idx, spaceRef);
+    });
+  }
+
+  const unlinkBtn = document.getElementById('sf-unlink-batch');
+  if (unlinkBtn) {
+    unlinkBtn.addEventListener('click', () => {
+      delete boardAppState.board.spaces[idx].linkedBatchCardId;
+      boardAppState.publish('board_updated', boardAppState.board);
+      renderSpaceForm(boardAppState.board);
+    });
+  }
 }
 
 // ---- Helpers ----
