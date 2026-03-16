@@ -13,8 +13,8 @@ Select an asset type from the sidebar (Property, Chance, Railroad, etc.) and use
 ### Managing Batches
 Once a card is configured, click "Create and add to batch" to save it. You can view all saved cards in the Batch Preview, where you can pan, zoom, and duplicate existing cards.
 
-### Exporting
-Use the "Export as PNG" button for individual cards or the batch export options to download your entire set as a collection.
+### Board Editor
+Create a full custom game board with property spaces, action spaces, and custom corner squares (Go, Jail, Free Parking, etc.). Access the board editor via the **Board Editor** link in the sidebar.
 
 ## Local Installation
 
@@ -47,6 +47,7 @@ The generator currently supports the following asset types:
 - Card Backs
 - Currency Denominations
 - Custom Dice Faces
+- Game Boards (Full Board Customization)
 
 ## Legal Disclaimer
 

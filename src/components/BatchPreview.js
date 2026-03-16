@@ -11,7 +11,7 @@ export function renderBatchPreview(container) {
 
   const render = () => {
     const cards = appState.batchCards;
-    
+
     if (cards.length === 0) {
       container.innerHTML = `
         <div class="batch-empty">
@@ -199,7 +199,7 @@ function bindBatchInteractions(container) {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
     const newScale = Math.max(0.1, Math.min(5, scale + delta));
-    
+
     // Zoom towards mouse position (approximate for now)
     // To do it perfectly we'd need to adjust panX/panY too
     scale = newScale;

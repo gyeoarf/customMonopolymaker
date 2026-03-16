@@ -52,7 +52,7 @@ export function importProjectJson(jsonString) {
 
     appState.projectName = project.projectName || '';
     appState.selectedBatchCardId = null;
-    
+
     // Rebuild batch cards, assigning new IDs if missing
     appState.batchCards = project.cards.map(card => ({
       id: card.id || crypto.randomUUID(),

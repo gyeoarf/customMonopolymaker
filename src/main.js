@@ -23,7 +23,7 @@ export const appState = {
   projectName: '',
   batchCards: [],           // Array of { id, type, data, timestamp }
   selectedBatchCardId: null,
-  
+
   assetData: {
     property: {
       title: 'TITLE DEED',
@@ -127,7 +127,7 @@ export const appState = {
       }
     }
   },
-  
+
   setActiveMenu(menuId) {
     this.activeMenu = menuId;
     this.publish('menu_changed', this.activeMenu);
@@ -189,19 +189,19 @@ export const appState = {
   selectBatchCard(id) {
     const card = this.batchCards.find(c => c.id === id);
     if (!card) return;
-    
+
     this.selectedBatchCardId = id;
     // Load data into editor
     this.assetData[card.type] = JSON.parse(JSON.stringify(card.data));
-    
+
     // Switch to the correct menu
     const menuId = this.assetTypeToMenu(card.type);
-    
+
     // Update nav UI
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     const targetNav = document.querySelector(`.nav-item[data-menu="${menuId}"]`);
     if (targetNav) targetNav.classList.add('active');
-    
+
     this.setActiveMenu(menuId);
     this.publish('batch_updated', this.batchCards);
   },
@@ -214,14 +214,14 @@ export const appState = {
   duplicateBatchCard(id) {
     const cardIndex = this.batchCards.findIndex(c => c.id === id);
     if (cardIndex === -1) return;
-    
+
     const original = this.batchCards[cardIndex];
     const duplicate = {
       ...original,
       id: `card_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
       data: JSON.parse(JSON.stringify(original.data))
     };
-    
+
     // Insert after the original
     this.batchCards.splice(cardIndex + 1, 0, duplicate);
     this.publish('batch_updated', this.batchCards);
@@ -238,7 +238,7 @@ function renderShell() {
     <div class="app-container">
       <aside class="sidebar">
         <h1 class="brand">Monopoly Maker</h1>
-        
+
         <nav class="nav-group">
           <h2>Cards</h2>
           <ul>
@@ -276,6 +276,16 @@ function renderShell() {
         </nav>
 
         <nav class="nav-group">
+          <h2>Board</h2>
+          <ul>
+            <li class="nav-item nav-item-link" id="btn-board-editor">
+              <i data-lucide="settings-2"></i> Board Editor
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:auto; opacity:0.5;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </li>
+          </ul>
+        </nav>
+
+        <nav class="nav-group">
           <h2>Project</h2>
           <ul>
             <li class="nav-item" id="btn-export-json">
@@ -287,12 +297,12 @@ function renderShell() {
           </ul>
         </nav>
       </aside>
-      
+
       <main class="workspace">
         <section class="form-panel" id="form-container">
           <!-- Active Form Injected Here -->
         </section>
-        
+
         <section class="preview-panel">
           <header class="preview-header">
             <div class="preview-toggle-group">
@@ -313,9 +323,12 @@ function renderShell() {
               <button id="btn-export-zip" class="btn-primary btn-zip">
                 <i data-lucide="folder-down"></i> Export all as ZIP
               </button>
+              <button id="btn-clear-batch" class="btn-primary btn-danger">
+                <i data-lucide="rotate-cw"></i> Clear Batch
+              </button>
             </div>
           </header>
-          
+
           <div class="preview-workspace" id="preview-workspace">
             <div id="export-wrapper" class="export-wrapper">
               <!-- Active Preview Injected Here -->
@@ -386,7 +399,7 @@ function renderShell() {
       Upload, FolderDown, PackagePlus
     }
   });
-  
+
   // Bind Navigation
   document.querySelectorAll('.nav-item[data-menu]').forEach(item => {
     item.addEventListener('click', (e) => {
@@ -400,6 +413,11 @@ function renderShell() {
   // Bind project name input
   document.getElementById('project-name-input').addEventListener('input', (e) => {
     appState.projectName = e.target.value;
+  });
+
+  // Bind Board Editor link (opens separate page)
+  document.getElementById('btn-board-editor').addEventListener('click', () => {
+    window.location.href = 'board.html';
   });
 
   // Bind JSON Export (modal with copy + download)
@@ -476,6 +494,16 @@ function renderShell() {
   // Bind "Create and add to batch"
   document.getElementById('btn-add-batch').addEventListener('click', () => {
     appState.addToBatch();
+    updateBatchCount();
+  });
+
+  // Bind Clear Batch
+  document.getElementById('btn-clear-batch').addEventListener('click', () => {
+    if (appState.batchCards.length === 0) return;
+    if (!confirm('Clear all cards from the batch? This cannot be undone.')) return;
+    appState.batchCards = [];
+    appState.selectedBatchCardId = null;
+    appState.publish('batch_updated', appState.batchCards);
     updateBatchCount();
   });
 
@@ -570,21 +598,68 @@ function showProjectNameModal(onConfirm) {
   confirmBtn.addEventListener('click', onConfirmClick);
 }
 
+// ============================================================
+//  localStorage persistence
+// ============================================================
+const STORAGE_KEY = 'customMonopoly_appState';
+
+function saveAppState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      projectName: appState.projectName,
+      batchCards: appState.batchCards,
+      assetData: appState.assetData
+    }));
+  } catch (e) { /* localStorage full — ignore */ }
+}
+
+function restoreAppState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+
+    if (s.projectName) {
+      appState.projectName = s.projectName;
+      const input = document.getElementById('project-name-input');
+      if (input) input.value = s.projectName;
+    }
+
+    if (s.assetData) {
+      for (const key of Object.keys(appState.assetData)) {
+        if (s.assetData[key]) {
+          Object.assign(appState.assetData[key], s.assetData[key]);
+        }
+      }
+    }
+
+    if (Array.isArray(s.batchCards)) {
+      appState.batchCards = s.batchCards;
+    }
+  } catch (e) {
+    console.warn('Failed to restore app state:', e);
+  }
+}
+
 // Initialize Application
 function init() {
   renderShell();
-  
+
+  // Restore saved state before first render — data is in place
+  // when publish('menu_changed') triggers the initial render below
+  restoreAppState();
+
   appState.subscribe('menu_changed', (menuId) => {
     const formContainer = document.getElementById('form-container');
     const previewWorkspace = document.getElementById('export-wrapper');
-    
+
     // Clear containers
     formContainer.innerHTML = '';
     previewWorkspace.innerHTML = '';
-    
+
     // CRITICAL: Clear all component subscriptions to prevent accumulation
     appState.clearComponentSubscriptions();
-    
+
     // Remove previous specific styling wrappers if necessary
     previewWorkspace.className = 'export-wrapper';
 
@@ -651,3 +726,7 @@ function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+// Save state on page exit + periodic safety net
+window.addEventListener('beforeunload', saveAppState);
+setInterval(saveAppState, 5000);

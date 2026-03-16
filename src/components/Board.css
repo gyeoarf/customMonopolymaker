@@ -1,0 +1,398 @@
+/* ============================================
+   Board Preview - Monopoly Board Layout
+   ============================================ */
+
+/* ---- The Board Grid ---- */
+.monopoly-board {
+  display: grid;
+  grid-template-columns: 130px repeat(9, 1fr) 130px;
+  grid-template-rows: 130px repeat(9, 1fr) 130px;
+  width: 1100px;
+  height: 1100px;
+  border: 3px solid #000;
+  background-color: #C8E6C8;
+  box-sizing: border-box;
+  position: relative;
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* ---- Board Center ---- */
+.board-center {
+  grid-row: 2 / 11;
+  grid-column: 2 / 11;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.board-center-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* ---- Generic Space ---- */
+.board-space {
+  border: 1px solid #000;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  background-color: #fff;
+  cursor: pointer;
+}
+
+.board-space:hover {
+  outline: 2px solid var(--primary, #3b82f6);
+  outline-offset: -2px;
+  z-index: 5;
+}
+
+.board-space.highlighted {
+  outline: 3px solid #f59e0b;
+  outline-offset: -3px;
+  z-index: 6;
+}
+
+/* ---- Space Inner Content ---- */
+.space-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Rotations for each side - applied to inner content */
+/* Left/right cells are 130px wide x ~93px tall. Content is rendered portrait
+   (93.33 x 130) then rotated to fill the landscape cell. */
+.side-left .space-inner {
+  transform: rotate(90deg);
+  width: 93.33px;
+  height: 130px;
+  transform-origin: center center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -65px;
+  margin-left: -46.665px;
+}
+
+.side-top .space-inner {
+  transform: rotate(180deg);
+}
+
+.side-right .space-inner {
+  transform: rotate(-90deg);
+  width: 93.33px;
+  height: 130px;
+  transform-origin: center center;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin-top: -65px;
+  margin-left: -46.665px;
+}
+
+/* ---- Color Stripe (property type) ---- */
+.space-color-stripe {
+  width: 100%;
+  height: 28px;
+  min-height: 28px;
+  border-bottom: 1px solid #000;
+}
+
+/* ---- Space Content Area ---- */
+.space-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  text-align: center;
+  overflow: hidden;
+  width: 100%;
+}
+
+.space-name {
+  font-size: 6px;
+  font-weight: 700;
+  text-transform: uppercase;
+  line-height: 1.15;
+  letter-spacing: 0.3px;
+  word-wrap: break-word;
+  max-width: 100%;
+  padding: 0 2px;
+}
+
+.space-image {
+  max-width: 30px;
+  max-height: 30px;
+  margin: 2px 0;
+}
+
+.space-image img {
+  max-width: 100%;
+  max-height: 30px;
+  object-fit: contain;
+}
+
+.space-price {
+  font-size: 6px;
+  font-weight: 600;
+  margin-top: auto;
+  padding-bottom: 2px;
+}
+
+/* ---- Space Type Icons (for non-property types) ---- */
+.space-type-icon {
+  font-size: 16px;
+  margin: 2px 0;
+}
+
+/* ---- Corner Spaces ---- */
+.board-space.corner {
+  background-color: #fff;
+}
+
+.corner-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4px;
+  position: relative;
+  overflow: hidden;
+}
+
+.corner-text {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.corner-subtext {
+  font-size: 7px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+
+.corner-image {
+  max-width: 50px;
+  max-height: 50px;
+  margin: 4px 0;
+}
+
+.corner-image img {
+  max-width: 100%;
+  max-height: 50px;
+  object-fit: contain;
+}
+
+/* Corner-specific rotations */
+.corner-go .corner-inner {
+  transform: rotate(-45deg);
+}
+
+.corner-jail .corner-inner {
+  /* No rotation needed, jail is bottom-left */
+}
+
+.corner-free-parking .corner-inner {
+  /* No rotation needed */
+}
+
+.corner-go-to-jail .corner-inner {
+  /* No rotation needed */
+}
+
+/* ---- Board Form Styles ---- */
+.board-form-section {
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.board-form-section:last-child {
+  border-bottom: none;
+}
+
+.board-form-section h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: var(--text-dark, #0f172a);
+}
+
+.board-space-select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 12px;
+  background: #fff;
+  color: var(--text-dark, #0f172a);
+  margin-bottom: 12px;
+}
+
+.board-type-select {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 12px;
+  background: #fff;
+  margin-bottom: 10px;
+}
+
+.board-form-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.board-form-row label {
+  font-size: 12px;
+  font-weight: 500;
+  min-width: 100px;
+  color: var(--text-dark, #0f172a);
+}
+
+.board-form-row input[type="text"],
+.board-form-row input[type="color"] {
+  flex: 1;
+}
+
+.board-form-row input[type="color"] {
+  width: 40px;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.board-form-row input[type="text"] {
+  padding: 6px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.board-form-row .btn-clear {
+  padding: 4px 10px;
+  font-size: 11px;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.board-form-row .btn-clear:hover {
+  background: #dc2626;
+}
+
+/* ============================================
+   Board Page — Standalone Layout
+   ============================================ */
+
+/* Back link in top bar */
+.top-bar-back {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.top-bar-back:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--text-light);
+}
+
+/* Toolbar button */
+.board-toolbar-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--primary);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.board-toolbar-btn:hover {
+  background: var(--primary-hover);
+}
+
+.board-toolbar-btn--danger {
+  background: #ef4444;
+}
+
+.board-toolbar-btn--danger:hover {
+  background: #dc2626;
+}
+
+/* Form panel (left sidebar for board page) */
+.board-form-panel {
+  width: 340px;
+  min-width: 340px;
+  background-color: var(--bg-panel);
+  border-right: 1px solid var(--border-color);
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.board-form-panel h2 {
+  color: var(--text-light);
+}
+
+.board-form-panel h3 {
+  color: var(--text-light);
+}
+
+.board-form-panel label {
+  color: var(--text-light);
+}
+
+/* Preview workspace (takes remaining space) */
+.board-preview-workspace {
+  flex: 1;
+  background-color: var(--bg-workspace);
+  position: relative;
+  overflow: hidden;
+  cursor: grab;
+}
+
+/* Export wrapper inside workspace */
+.board-export-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+}
