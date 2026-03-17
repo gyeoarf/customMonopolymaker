@@ -106,7 +106,7 @@ function renderStaticActionCard(d, type) {
           ${showDefault ? `<img src="${defaultImg}" class="action-icon" style="pointer-events: none;" />` : ''}
           ${hasCustomImage ? `<img src="${d.image}" class="action-icon" style="pointer-events: none;" />` : ''}
         </div>
-        <div class="action-body">
+        <div class="action-body" style="transform: translateY(${d.textOffsetY ?? -25}px);">
           ${escapedText}
         </div>
       </div>

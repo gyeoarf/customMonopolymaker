@@ -45,12 +45,14 @@ export const appState = {
     chance: {
       text: 'ADVANCE TO GO. (COLLECT $200)',
       image: null,
-      transform: { x: 0, y: 0, width: 100, height: 100, rotation: 0, flipX: 1, flipY: 1 }
+      transform: { x: 0, y: 0, width: 100, height: 100, rotation: 0, flipX: 1, flipY: 1 },
+      textOffsetY: -25
     },
     chest: {
       text: 'BANK ERROR IN YOUR FAVOR. COLLECT $200',
       image: null,
-      transform: { x: 0, y: 0, width: 100, height: 100, rotation: 0, flipX: 1, flipY: 1 }
+      transform: { x: 0, y: 0, width: 100, height: 100, rotation: 0, flipX: 1, flipY: 1 },
+      textOffsetY: -25
     },
     back: {
       backgroundColor: '#E53935',

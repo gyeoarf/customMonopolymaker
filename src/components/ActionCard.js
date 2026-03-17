@@ -21,6 +21,11 @@ export function renderActionCardForm(container, type) { // type can be 'chance',
       </div>
       
       <div class="form-group">
+        <label>Text Vertical Offset (px)</label>
+        <input type="number" id="ac-text-offset-y" value="${stateRef.textOffsetY ?? -25}" style="width:80px; padding:6px 8px; border:1px solid #cbd5e1; border-radius:4px;" />
+      </div>
+
+      <div class="form-group">
         <label>Center Image (Optional)</label>
         <input type="file" id="ac-img-upload" accept="image/*" />
         <button id="ac-clear-img" class="btn-secondary" style="margin-top:5px; display:${stateRef.image ? 'block' : 'none'}">Clear Custom Image</button>
@@ -53,6 +58,10 @@ export function renderActionCardForm(container, type) { // type can be 'chance',
   if (type === 'chance' || type === 'chest') {
     document.getElementById('ac-text').addEventListener('input', (e) => {
       appState.updateState(type, 'text', e.target.value);
+    });
+
+    document.getElementById('ac-text-offset-y').addEventListener('input', (e) => {
+      appState.updateState(type, 'textOffsetY', parseInt(e.target.value, 10) || 0);
     });
 
     document.getElementById('ac-img-upload').addEventListener('change', (e) => {
@@ -113,7 +122,7 @@ export function renderActionCardPreview(container, type) {
              <img id="preview-ac-img-default" src="${defaultImgSrc}" class="action-icon" style="display: ${!stateRef.image && isChest ? 'block' : 'none'}; pointer-events: none;" />
           </div>
 
-          <div class="action-body" id="preview-ac-text">
+          <div class="action-body" id="preview-ac-text" style="transform: translateY(${stateRef.textOffsetY ?? -25}px);">
             ${escapeHtml(stateRef.text || '').replace(/\\n/g, '<br/>')}
           </div>
         </div>
@@ -126,6 +135,7 @@ export function renderActionCardPreview(container, type) {
       const textEl = document.getElementById('preview-ac-text');
       if (textEl) {
         textEl.innerHTML = escapeHtml(data.text || '').replace(/\\n/g, '<br/>');
+        textEl.style.transform = `translateY(${data.textOffsetY ?? -25}px)`;
       }
       
       const defaultImg = document.getElementById('preview-ac-img-default');

@@ -199,7 +199,8 @@ A card batch file wraps one or more cards in this structure:
   "data": {
     "text": "ADVANCE TO GO. (COLLECT $200)",
     "image": null,
-    "transform": { "x": 0, "y": 0, "width": 100, "height": 100, "rotation": 0, "flipX": 1, "flipY": 1 }
+    "transform": { "x": 0, "y": 0, "width": 100, "height": 100, "rotation": 0, "flipX": 1, "flipY": 1 },
+    "textOffsetY": -25
   }
 }
 ```
@@ -209,6 +210,7 @@ A card batch file wraps one or more cards in this structure:
 | `text` | string | *(varies)* | Instruction text on the card |
 | `image` | string or null | `null` | Card image (base64 data URL) |
 | `transform` | object | see below | Image positioning |
+| `textOffsetY` | number | `-25` | Vertical offset for the text in pixels (negative moves up) |
 
 Use `"type": "chest"` for Community Chest cards. Same structure.
 
