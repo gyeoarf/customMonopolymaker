@@ -2,6 +2,9 @@ import { appState } from '../main.js';
 import { renderStaticCard, getCardDimensions } from './CardRenderer.js';
 import { escapeHtml } from '../utils/sanitize.js';
 
+// Persistent zoom/pan state for the batch viewport
+let batchViewState = { scale: 1, panX: 0, panY: 0 };
+
 /**
  * Renders the full-size batch preview (for the toggle view).
  * Shows actual rendered card thumbnails scaled down.
@@ -109,6 +112,17 @@ export function renderBatchStrip(container) {
         appState.selectBatchCard(el.dataset.cardId);
       });
     });
+
+    // Convert vertical scroll to horizontal scroll on the strip
+    const scrollEl = container.querySelector('.strip-scroll');
+    if (scrollEl) {
+      scrollEl.addEventListener('wheel', (e) => {
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+          e.preventDefault();
+          scrollEl.scrollLeft += e.deltaY;
+        }
+      }, { passive: false });
+    }
   };
 
   appState.subscribe('batch_updated', render);
@@ -176,9 +190,8 @@ function bindBatchInteractions(container) {
   const canvas = container.querySelector('#batch-canvas');
   if (!viewport || !canvas) return;
 
-  let scale = 1;
-  let panX = 0;
-  let panY = 0;
+  // Restore persistent zoom/pan state
+  let { scale, panX, panY } = batchViewState;
   let isPanning = false;
   let startX = 0;
   let startY = 0;
@@ -195,14 +208,14 @@ function bindBatchInteractions(container) {
     }
   };
 
+  // Apply the saved transform immediately
+  updateTransform();
+
   viewport.addEventListener('wheel', (e) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    const newScale = Math.max(0.1, Math.min(5, scale + delta));
-
-    // Zoom towards mouse position (approximate for now)
-    // To do it perfectly we'd need to adjust panX/panY too
-    scale = newScale;
+    scale = Math.max(0.1, Math.min(5, scale + delta));
+    batchViewState.scale = scale;
     requestUpdate();
   }, { passive: false });
 
@@ -221,6 +234,8 @@ function bindBatchInteractions(container) {
     if (!isPanning) return;
     panX = e.clientX - startX;
     panY = e.clientY - startY;
+    batchViewState.panX = panX;
+    batchViewState.panY = panY;
     requestUpdate();
   };
 

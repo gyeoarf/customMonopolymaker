@@ -7,12 +7,15 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .batch-workspace {
   background-color: #e2e8f0;
   background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
   background-size: 20px 20px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* Empty state */
@@ -67,6 +70,7 @@
   align-items: flex-start;
   align-content: flex-start;
   will-change: transform;
+  width: 2400px;
 }
 
 /* Each card wrapper in full batch view — width/height set inline per-type */
@@ -225,6 +229,7 @@
   align-items: flex-start;
   scrollbar-width: thin;
   scrollbar-color: #334155 transparent;
+  max-width: 800px;
 }
 
 .strip-scroll::-webkit-scrollbar {

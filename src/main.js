@@ -700,9 +700,10 @@ function init() {
         formContainer.innerHTML = '<p class="text-muted">Select an item from the menu.</p>';
     }
 
-    // Re-subscribe batch preview and strip (they were cleared above)
+    // Re-subscribe batch preview, strip, and counter (they were cleared above)
     renderBatchPreview(document.getElementById('batch-preview-container'));
     renderBatchStrip(document.getElementById('batch-strip-container'));
+    appState.subscribe('batch_updated', () => updateBatchCount());
     updateBatchCount();
   });
 
