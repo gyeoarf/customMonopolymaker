@@ -76,6 +76,10 @@ export function renderBatchStrip(container) {
       return;
     }
 
+    // Preserve scroll position across re-renders
+    const prevScroll = container.querySelector('.strip-scroll');
+    const savedScrollLeft = prevScroll ? prevScroll.scrollLeft : 0;
+
     container.innerHTML = `
       <div class="strip-scroll">
         ${cards.map(card => {
@@ -94,6 +98,10 @@ export function renderBatchStrip(container) {
         `}).join('')}
       </div>
     `;
+
+    // Restore scroll position
+    const newScroll = container.querySelector('.strip-scroll');
+    if (newScroll) newScroll.scrollLeft = savedScrollLeft;
 
     // Bind strip interactions
     container.querySelectorAll('.strip-card-delete').forEach(btn => {
