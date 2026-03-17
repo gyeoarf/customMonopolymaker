@@ -286,6 +286,7 @@ export function renderSpecialCardPreview(container, type) {
             ...data.transform,
             onUpdate: (newTrans) => {
               appState.assetData.utility.transform = newTrans;
+              appState.syncBatchCard('utility');
             }
           });
         } else {

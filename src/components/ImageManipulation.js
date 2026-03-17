@@ -44,12 +44,12 @@ export function renderImageToolbar(container, assetType) {
       const faceIdx = appState.assetData.dice.activeFaceIndex;
       if (faceIdx === null) return;
       appState.assetData.dice.transforms[faceIdx][key] = val;
-      // Publish parent trigger
       appState.publish('dice_updated', appState.assetData.dice);
     } else {
       appState.assetData[assetType].transform[key] = val;
       appState.publish(`${assetType}_updated`, appState.assetData[assetType]);
     }
+    appState.syncBatchCard(assetType);
   };
 
   document.getElementById('t-scale').addEventListener('input', (e) => {

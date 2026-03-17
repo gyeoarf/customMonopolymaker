@@ -109,6 +109,7 @@ export function renderCurrencyPreview(container) {
           ...data.transform,
           onUpdate: (newTrans) => {
             appState.assetData.currency.transform = newTrans;
+            appState.syncBatchCard('currency');
           }
         });
       } else {

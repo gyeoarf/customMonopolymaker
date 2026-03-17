@@ -119,8 +119,11 @@ export const appState = {
   updateState(assetType, key, value) {
     this.assetData[assetType][key] = value;
     this.publish(`${assetType}_updated`, this.assetData[assetType]);
+    this.syncBatchCard(assetType);
+  },
 
-    // If we are editing a selected batch card, sync updates
+  // Sync current assetData to the selected batch card (if editing one)
+  syncBatchCard(assetType) {
     if (this.selectedBatchCardId) {
       const card = this.batchCards.find(c => c.id === this.selectedBatchCardId);
       if (card && card.type === assetType) {

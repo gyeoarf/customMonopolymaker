@@ -100,6 +100,7 @@ export function renderDicePreview(container) {
             ...data.transforms[i],
             onUpdate: (newTrans) => {
               appState.assetData.dice.transforms[i] = newTrans;
+              appState.syncBatchCard('dice');
             }
           });
         } else {

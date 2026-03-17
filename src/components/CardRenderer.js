@@ -41,9 +41,14 @@ export function getCardDimensions(type) {
   }
 }
 
-function renderBgImage(url) {
+function renderBgImage(url, transform) {
   if (!url || url === 'assets/cardselements/placeholder.jpeg') return '';
-  // url is either a base64 string or a local path, but let's be safe
+  if (transform) {
+    const t = transform;
+    return `<div style="position:absolute; top:0; left:0; width:${t.width}px; height:${t.height}px; transform: translate(${t.x}px, ${t.y}px) rotate(${t.rotation || 0}deg); z-index:0; pointer-events:none;">
+      <img src="${url}" style="width:100%; height:100%; transform: scaleX(${t.flipX || 1}) scaleY(${t.flipY || 1});" />
+    </div>`;
+  }
   return `<img src="${url}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:0; pointer-events:none;" />`;
 }
 
@@ -54,7 +59,7 @@ function renderStaticProperty(d) {
       color: ${d.textColor || '#000000'};
       position: relative;
     ">
-      ${d.backgroundImageUrl ? renderBgImage(d.backgroundImageUrl) : ''}
+      ${d.backgroundImageUrl ? renderBgImage(d.backgroundImageUrl, d.transform) : ''}
       <div class="card-border" style="border-color: ${d.textColor || '#000000'}; position: relative; z-index: 10; pointer-events: none;">
         <div class="card-header" style="background-color: ${d.headerColor || '#005CE6'}; color: ${d.headerTextColor || '#FFFFFF'}; border-bottom-color: ${d.textColor || '#000000'};">
           <div class="title-deed">TITLE DEED</div>
@@ -117,7 +122,7 @@ function renderStaticActionCard(d, type) {
 function renderStaticBack(d) {
   return `
     <div class="property-card action-card-container" style="background-color: ${d.backgroundColor}; position: relative; overflow: hidden;">
-      ${d.image ? renderBgImage(d.image) : ''}
+      ${d.image ? renderBgImage(d.image, d.transform) : ''}
       <div class="card-border action-back" style="position:relative; z-index:10; pointer-events:none;">
       </div>
     </div>
@@ -166,7 +171,7 @@ function renderStaticUtility(d) {
       color: ${d.textColor};
       position: relative;
     ">
-      ${d.backgroundImageUrl ? renderBgImage(d.backgroundImageUrl) : ''}
+      ${d.backgroundImageUrl ? renderBgImage(d.backgroundImageUrl, d.transform) : ''}
       <div class="card-border" style="border-color: ${d.textColor}; position:relative; z-index:10; pointer-events: none;">
         <div class="card-header" style="
           background-color: ${d.headerColor};
@@ -194,7 +199,7 @@ function renderStaticCurrency(d) {
   const val = escapeHtml(String(d.denomination));
   return `
     <div class="currency-bill" style="background-color: ${d.backgroundColor}; position: relative;">
-      ${d.backgroundImageUrl ? renderBgImage(d.backgroundImageUrl) : ''}
+      ${d.backgroundImageUrl ? renderBgImage(d.backgroundImageUrl, d.transform) : ''}
       <div class="bill-border">
         <div class="bill-inner-border">
           <div class="corner top-left">${val}</div>
@@ -214,7 +219,7 @@ function renderStaticDice(d) {
       ${Array.from({ length: 6 }).map((_, i) => `
         <div class="dice-face">
           <div class="face-number" style="z-index: 10; position: relative;">${i + 1}</div>
-          ${d.faces && d.faces[i] ? `<img src="${d.faces[i]}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; z-index:1;" />` : ''}
+          ${d.faces && d.faces[i] ? renderBgImage(d.faces[i], d.transforms && d.transforms[i]) : ''}
         </div>
       `).join('')}
     </div>

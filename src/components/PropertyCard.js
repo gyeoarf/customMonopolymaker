@@ -228,6 +228,7 @@ export function renderPropertyPreview(container) {
           ...data.transform,
           onUpdate: (newTrans) => {
             appState.assetData.property.transform = newTrans;
+            appState.syncBatchCard('property');
           }
         });
       } else {

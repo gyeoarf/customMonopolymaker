@@ -149,8 +149,8 @@ export function renderActionCardPreview(container, type) {
           interactableInstance = createInteractableImage(data.image, containerEl, {
             ...data.transform,
             onUpdate: (newTrans) => {
-              // Update state silently so we don't cause an infinite re-render loop
               appState.assetData[type].transform = newTrans;
+              appState.syncBatchCard(type);
             }
           });
         } else {
@@ -193,6 +193,7 @@ export function renderActionCardPreview(container, type) {
             ...data.transform,
             onUpdate: (newTrans) => {
               appState.assetData.back.transform = newTrans;
+              appState.syncBatchCard('back');
             }
           });
         } else {
