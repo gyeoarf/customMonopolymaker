@@ -15,6 +15,7 @@ export function renderDiceForm(container) {
       <div class="form-group" style="margin-bottom: 20px;">
         <label>Upload Image for Selected Face (<span id="active-face-label">${dice.activeFaceIndex !== null ? dice.activeFaceIndex + 1 : 'None Selected'}</span>)</label>
         <input type="file" id="dice-img-upload" accept="image/*" ${dice.activeFaceIndex === null ? 'disabled' : ''} />
+        <button id="dice-clear-img" class="btn-secondary" style="margin-top:5px; display:${dice.activeFaceIndex !== null && dice.faces[dice.activeFaceIndex] ? 'block' : 'none'}">Clear Face Image</button>
       </div>
 
       <div id="image-toolbar-container" style="display: none">
@@ -35,6 +36,15 @@ export function renderDiceForm(container) {
       };
       reader.readAsDataURL(file);
       e.target.value = ''; // Reset
+    }
+  });
+
+  document.getElementById('dice-clear-img').addEventListener('click', () => {
+    const { activeFaceIndex } = appState.assetData.dice;
+    if (activeFaceIndex !== null) {
+      appState.assetData.dice.faces[activeFaceIndex] = null;
+      appState.publish('dice_updated', appState.assetData.dice);
+      renderDiceForm(container);
     }
   });
 
