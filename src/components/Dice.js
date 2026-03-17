@@ -114,4 +114,7 @@ export function renderDicePreview(container) {
       }
     });
   });
+
+  // Immediately trigger with current data to handle images already in state (e.g. navigating back)
+  appState.publish('dice_updated', appState.assetData.dice);
 }

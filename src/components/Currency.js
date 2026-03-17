@@ -122,4 +122,7 @@ export function renderCurrencyPreview(container) {
       }
     }
   });
+
+  // Immediately trigger with current data to handle images already in state (e.g. batch card loaded)
+  appState.publish('currency_updated', appState.assetData.currency);
 }
