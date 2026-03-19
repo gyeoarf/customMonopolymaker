@@ -6,7 +6,7 @@
 
 import './style.css';
 import './components/Board.css';
-import html2canvas from 'html2canvas';
+import * as htmlToImage from 'html-to-image';
 import { createDefaultBoardState } from './data/defaultBoard.js';
 import { renderBoardForm, renderBoardPreview, cleanupBoardListeners, setBoardAppState } from './components/Board.js';
 
@@ -335,17 +335,20 @@ async function downloadBoardPng() {
   boardEl.style.transform = 'none';
   boardEl.style.transformOrigin = '';
 
+  // Remove highlight momentarily
+  const highlightedSpace = boardEl.querySelector('.highlighted');
+  if (highlightedSpace) {
+    highlightedSpace.classList.remove('highlighted');
+  }
+
   try {
-    const canvas = await html2canvas(boardEl, {
-      scale: 3,
-      backgroundColor: null,
-      useCORS: true,
-      allowTaint: true,
+    const blob = await htmlToImage.toBlob(boardEl, {
+      pixelRatio: 3,
+      backgroundColor: 'transparent',
       width: 1100,
       height: 1100
     });
 
-    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.download = 'monopoly_board.png';
@@ -360,6 +363,10 @@ async function downloadBoardPng() {
     exportWrapper.style.transformOrigin = savedOrigin;
     boardEl.style.transform = savedBoardTransform;
     boardEl.style.transformOrigin = savedBoardOrigin;
+
+    if (highlightedSpace) {
+      highlightedSpace.classList.add('highlighted');
+    }
   }
 }
 
